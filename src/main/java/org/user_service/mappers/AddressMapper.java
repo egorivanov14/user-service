@@ -1,39 +1,18 @@
 package org.user_service.mappers;
 
-import org.springframework.stereotype.Component;
-import org.user_service.DTO.AddressCreateRequest;
-import org.user_service.DTO.AddressResponse;
+import org.mapstruct.Mapper;
+import org.user_service.dto.AddressDto;
 import org.user_service.entity.Address;
-import org.user_service.entity.User;
 
-@Component
-public class AddressMapper {
+import java.util.List;
 
-    public AddressResponse toResponse(Address address){
-        AddressResponse response = new AddressResponse();
+@Mapper(componentModel = "spring")
+public interface AddressMapper {
 
-        response.setId(address.getId());
-        response.setStreet(address.getStreet());
-        response.setCity(address.getCity());
-        response.setZip(address.getZip());
-        response.setState(address.getState());
-        response.setCountry(address.getCountry());
-        response.setUserId(address.getUser().getId());
+    // Уберите @Mapping(target = "user", ignore = true) - это не нужно
+    Address toEntity(AddressDto addressDto);
 
-        return response;
-    }
+    AddressDto toDto(Address address);
 
-    public Address toEntity(AddressCreateRequest request, User user){
-        Address address = new Address();
-
-        address.setStreet(request.getStreet());
-        address.setCity(request.getCity());
-        address.setZip(request.getZip());
-        address.setState(request.getState());
-        address.setCountry(request.getCountry());
-        address.setUser(user);
-
-        return address;
-    }
-
+    List<AddressDto> toDtoList(List<Address> addresses);
 }

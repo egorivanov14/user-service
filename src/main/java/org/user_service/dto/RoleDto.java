@@ -1,9 +1,9 @@
-package org.user_service.DTO;
+package org.user_service.dto;
 
 import lombok.Data;
 
 @Data
-public class RoleResponse {
+public class RoleDto {
     private Long id;
     private String name;
 }

@@ -1,14 +1,13 @@
-package org.user_service.DTO;
+package org.user_service.dto;
 
 import lombok.Data;
 
 @Data
-public class AddressResponse {
+public class AddressDto {
     private Long id;
     private String street;
     private String city;
     private String zip;
     private String state;
     private String country;
-    private Long userId;
 }

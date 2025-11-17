@@ -1,19 +1,25 @@
 package org.user_service.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.security.core.GrantedAuthority;
 
-@Data
 @Entity
 @Table(name = "roles")
-public class Role {
+@Getter
+@Setter
+public class Role implements GrantedAuthority {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "role_name", unique = true, nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
+    @Override
+    public String getAuthority() {
+        return name;
+    }
 }
-

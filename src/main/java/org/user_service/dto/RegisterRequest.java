@@ -1,23 +1,22 @@
-package org.user_service.DTO;
+package org.user_service.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-
-import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
 
 @Data
-public class UserCreateRequest {
+@Getter
+@Setter
+public class RegisterRequest {
     @NotBlank
     @Email
     private String email;
 
     @NotBlank
-    private String passwordHash;
+    private String password;
 
     @NotBlank
     private String fullName;
-
-    private Set<@NotNull Long> roleIds;
 }

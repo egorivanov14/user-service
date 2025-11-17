@@ -1,11 +1,14 @@
 package org.user_service.entity;
 
-import jakarta.persistence.*;
-import lombok.Data;
 
-@Data
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 @Entity
-@Table(name = "address")
+@Table(name = "addresses")
+@Getter
+@Setter
 public class Address {
 
     @Id
@@ -19,16 +22,15 @@ public class Address {
     private String city;
 
     @Column(nullable = false)
+    private String zip;
+
+    @Column(nullable = false)
     private String state;
 
     @Column(nullable = false)
     private String country;
 
-    @Column(nullable = false)
-    private String zip;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
 }
