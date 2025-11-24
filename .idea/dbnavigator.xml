@@ -57,6 +57,7 @@
     <retain-sticky-names value="false" />
   </component>
   <component name="DBNavigator.Project.FileConnectionMappingManager">
+    <mapping file-url="file://$PROJECT_DIR$/src/main/resources/db/migration/V6__Create_refresh_tokens_table.sql" connection-id="1c481258-77c5-43da-a9e6-ff57306d60a3" session-id="MAIN" current-schema="public" />
     <mapping file-url="file://$PROJECT_DIR$/src/main/resources/db/migration/V5__Insert_default_roles.sql" connection-id="1c481258-77c5-43da-a9e6-ff57306d60a3" session-id="MAIN" current-schema="public" />
     <mapping file-url="file://$PROJECT_DIR$/src/main/resources/db/migration/V1__Create_roles_table.sql" connection-id="1c481258-77c5-43da-a9e6-ff57306d60a3" session-id="MAIN" current-schema="public" />
     <mapping file-url="file://$PROJECT_DIR$/src/main/resources/db/migration/V3__Create_addresses_table.sql" connection-id="1c481258-77c5-43da-a9e6-ff57306d60a3" session-id="MAIN" current-schema="public" />

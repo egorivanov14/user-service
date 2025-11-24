@@ -10,14 +10,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.user_service.dto.*;
 import org.user_service.entity.Address;
+import org.user_service.entity.RefreshToken;
 import org.user_service.entity.Role;
 import org.user_service.entity.User;
+import org.user_service.exeptions.DuplicateResourceException;
+import org.user_service.exeptions.ResourceNotFoundException;
+import org.user_service.exeptions.UnauthorizedException;
 import org.user_service.mappers.UserMapper;
 import org.user_service.repository.AddressRepository;
+import org.user_service.repository.RefreshTokenRepository;
 import org.user_service.repository.RoleRepository;
 import org.user_service.repository.UserRepository;
 import org.user_service.securiry.JwtTokenProvider;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,6 +36,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
     private final RoleRepository roleRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
@@ -38,28 +45,35 @@ public class UserService {
     @Transactional
     public LoginResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new DuplicateResourceException("Email already exists");
         }
 
         User user = userMapper.registerRequestToUser(request);
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
 
         Role userRole = roleRepository.findByName("USER")
-                .orElseThrow(() -> new RuntimeException("Default role 'USER' not found. Please create it first."));
+                .orElseThrow(() -> new ResourceNotFoundException("Default role 'USER' not found. Please create it first."));
         user.setRoles(new HashSet<>(Set.of(userRole)));
 
         User savedUser = userRepository.save(user);
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        // Создаем Authentication объект вручную без вызова authenticationManager
+        // Это позволяет сгенерировать токены сразу после регистрации
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                savedUser, null, savedUser.getAuthorities()
         );
 
-        String token = tokenProvider.generateToken(authentication);
+        String accessToken = tokenProvider.generateAccessToken(authentication);
+        String refreshToken = tokenProvider.generateRefreshToken(authentication);
+
+        saveRefreshToken(savedUser.getEmail(), refreshToken);
+
         UserDto userDto = userMapper.toDto(savedUser);
 
-        return new LoginResponse(token, userDto);
+        return new LoginResponse(accessToken, refreshToken, userDto, tokenProvider.getAccessTokenExpiration());
     }
 
+    @Transactional
     public LoginResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
@@ -68,19 +82,35 @@ public class UserService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        String token = tokenProvider.generateToken(authentication);
+        String accessToken = tokenProvider.generateAccessToken(authentication);
+        String refreshToken = tokenProvider.generateRefreshToken(authentication);
+
+        saveRefreshToken(user.getEmail(), refreshToken);
+
         UserDto userDto = userMapper.toDto(user);
 
-        return new LoginResponse(token, userDto);
+        return new LoginResponse(accessToken, refreshToken, userDto, tokenProvider.getAccessTokenExpiration());
     }
 
+    private void saveRefreshToken(String username, String token) {
+        refreshTokenRepository.deleteByUsername(username);
+
+        RefreshToken refreshTokenEntity = new RefreshToken(
+                token,
+                username,
+                Instant.now().plusMillis(tokenProvider.getRefreshTokenExpiration())
+        );
+        refreshTokenRepository.save(refreshTokenEntity);
+    }
+
+    // Остальные методы без изменений...
     @Transactional(readOnly = true)
     public UserDto getCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return userMapper.toDto(user);
     }
 
@@ -88,7 +118,7 @@ public class UserService {
     public UserDto updateCurrentUser(UserDto userDto) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (userDto.getFullName() != null) {
             user.setFullName(userDto.getFullName());
@@ -102,7 +132,9 @@ public class UserService {
     public void deleteCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        refreshTokenRepository.deleteByUsername(email);
         userRepository.delete(user);
     }
 
@@ -111,7 +143,7 @@ public class UserService {
     public List<AddressDto> getCurrentUserAddresses() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return user.getAddresses().stream()
                 .map(address -> {
@@ -131,7 +163,7 @@ public class UserService {
     public AddressDto addAddress(AddressDto addressDto) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Address address = new Address();
         address.setStreet(addressDto.getStreet());
@@ -151,13 +183,13 @@ public class UserService {
     public AddressDto updateAddress(Long addressId, AddressDto addressDto) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new RuntimeException("Address not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found"));
 
         if (!address.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Address does not belong to current user");
+            throw new UnauthorizedException("Address does not belong to current user");
         }
 
         if (addressDto.getStreet() != null) address.setStreet(addressDto.getStreet());
@@ -175,13 +207,13 @@ public class UserService {
     public void deleteAddress(Long addressId) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new RuntimeException("Address not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found"));
 
         if (!address.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Address does not belong to current user");
+            throw new UnauthorizedException("Address does not belong to current user");
         }
 
         addressRepository.delete(address);
@@ -198,10 +230,10 @@ public class UserService {
     @Transactional
     public UserDto updateUserRole(Long userId, String roleName) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Role role = roleRepository.findByName(roleName)
-                .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + roleName));
 
         user.getRoles().add(role);
         User updatedUser = userRepository.save(user);
@@ -209,11 +241,10 @@ public class UserService {
         return userMapper.toDto(updatedUser);
     }
 
-    // New method for creating roles
     @Transactional
     public RoleDto createRole(String roleName) {
         if (roleRepository.existsByName(roleName)) {
-            throw new RuntimeException("Role already exists: " + roleName);
+            throw new DuplicateResourceException("Role already exists: " + roleName);
         }
 
         Role role = new Role();
@@ -226,4 +257,44 @@ public class UserService {
         return dto;
     }
 
+    // Token refresh logic
+    @Transactional
+    public TokenRefreshResponse refreshAccessToken(String refreshTokenValue) {
+        if (!tokenProvider.validateRefreshToken(refreshTokenValue)) {
+            throw new UnauthorizedException("Invalid refresh token");
+        }
+
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenValue)
+                .orElseThrow(() -> new UnauthorizedException("Refresh token not found"));
+
+        if (refreshToken.isRevoked() || refreshToken.getExpiryDate().isBefore(Instant.now())) {
+            throw new UnauthorizedException("Refresh token has been revoked or expired");
+        }
+
+        String username = tokenProvider.getUsernameFromToken(refreshTokenValue);
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                user, null, user.getAuthorities()
+        );
+
+        String newAccessToken = tokenProvider.generateAccessToken(authentication);
+        String newRefreshToken = tokenProvider.generateRefreshToken(authentication);
+
+        refreshToken.setRevoked(true);
+        refreshTokenRepository.save(refreshToken);
+        saveRefreshToken(username, newRefreshToken);
+
+        return new TokenRefreshResponse(newAccessToken, newRefreshToken, tokenProvider.getAccessTokenExpiration());
+    }
+
+    @Transactional
+    public void logout(String refreshTokenValue) {
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenValue)
+                .orElseThrow(() -> new ResourceNotFoundException("Refresh token not found"));
+
+        refreshToken.setRevoked(true);
+        refreshTokenRepository.save(refreshToken);
+    }
 }

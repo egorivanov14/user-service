@@ -26,7 +26,10 @@ spring:
 
 jwt:
   secret: "foodDeliveryPlatformSecretKeyMustBeAtLeast32CharactersLong"
-  expiration: 86400000
+  access-token:
+    expiration: 900000  # 15 минут в миллисекундах
+  refresh-token:
+    expiration: 2592000000  # 30 дней в миллисекундах
 
 logging:
   level:

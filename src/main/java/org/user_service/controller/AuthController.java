@@ -6,13 +6,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.user_service.dto.LoginRequest;
-import org.user_service.dto.LoginResponse;
-import org.user_service.dto.RegisterRequest;
+import org.springframework.web.bind.annotation.*;
+import org.user_service.dto.*;
 import org.user_service.service.UserService;
 
 @RestController
@@ -24,8 +19,9 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/register")
-    @Operation(summary = "Register new user")
+    @Operation(summary = "Register new user and automatically login")
     public ResponseEntity<LoginResponse> register(@Valid @RequestBody RegisterRequest request) {
+        // После регистрации пользователь сразу получает токены
         return new ResponseEntity<>(userService.register(request), HttpStatus.CREATED);
     }
 
@@ -33,5 +29,21 @@ public class AuthController {
     @Operation(summary = "User login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(userService.login(request));
+    }
+
+    @PostMapping("/refresh")
+    @Operation(summary = "Refresh access token")
+    public ResponseEntity<TokenRefreshResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(userService.refreshAccessToken(request.getRefreshToken()));
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "User logout")
+    public ResponseEntity<Void> logout(@RequestHeader("X-Refresh-Token") String refreshToken) {
+        if (refreshToken.startsWith("Bearer ")) {
+            refreshToken = refreshToken.substring(7);
+        }
+        userService.logout(refreshToken);
+        return ResponseEntity.ok().build();
     }
 }
