@@ -70,7 +70,7 @@ public class UserService {
 
         UserDto userDto = userMapper.toDto(savedUser);
 
-        return new LoginResponse(accessToken, refreshToken, userDto, tokenProvider.getAccessTokenExpiration());
+        return new LoginResponse(accessToken, refreshToken);
     }
 
     @Transactional
@@ -91,7 +91,7 @@ public class UserService {
 
         UserDto userDto = userMapper.toDto(user);
 
-        return new LoginResponse(accessToken, refreshToken, userDto, tokenProvider.getAccessTokenExpiration());
+        return new LoginResponse(accessToken, refreshToken);
     }
 
     private void saveRefreshToken(String username, String token) {
