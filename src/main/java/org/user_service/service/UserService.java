@@ -242,6 +242,14 @@ public class UserService {
     }
 
     @Transactional
+    public void deleteUserById(Long userId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        userRepository.delete(user);
+    }
+
+    @Transactional
     public RoleDto createRole(String roleName) {
         if (roleRepository.existsByName(roleName)) {
             throw new DuplicateResourceException("Role already exists: " + roleName);

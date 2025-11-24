@@ -46,7 +46,6 @@ public class UserController {
         userService.deleteCurrentUser();
     }
 
-    // Address endpoints
     @GetMapping("/me/addresses")
     @Operation(summary = "Get current user addresses")
     @PreAuthorize("isAuthenticated()")
@@ -76,7 +75,6 @@ public class UserController {
         userService.deleteAddress(addressId);
     }
 
-    // Admin endpoints
     @GetMapping
     @Operation(summary = "Get all users (Admin only)")
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -91,7 +89,14 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUserRole(userId, role));
     }
 
-    // New endpoint for creating roles
+    @DeleteMapping("/delete")
+    @Operation(summary = "Delete user by id (Admin only)")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCurrentUserByAdmin(Long userId) {
+        userService.deleteUserById(userId);
+    }
+
     @PostMapping("/roles")
     @Operation(summary = "Create new role (Admin only)")
     @PreAuthorize("hasAuthority('ADMIN')")
