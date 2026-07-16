@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-index-payment-cards-user-id
+      author: max203383@gmail.com
+      changes:
+        - createIndex:
+            indexName: idx_payment_cards_user_id
+            tableName: payment_cards
+            columns:
+              - column:
+                  name: user_id
