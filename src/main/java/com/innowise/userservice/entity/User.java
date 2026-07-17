@@ -103,4 +103,16 @@ public class User {
   public LocalDateTime getUpdatedAt() {
     return updatedAt;
   }
+
+  public List<PaymentCard> getPaymentCards() {
+    return paymentCards;
+  }
+
+  public void addPaymentCard(PaymentCard paymentCard) {
+    this.paymentCards.add(paymentCard);
+  }
+
+  public void removePaymentCard(PaymentCard paymentCard) {
+    this.paymentCards.remove(paymentCard);
+  }
 }
