@@ -6,13 +6,13 @@ import org.springframework.data.jpa.domain.Specification;
 import static com.innowise.userservice.config.ConstantConfiguration.*;
 
 public class PaymentCardSpecification {
-  public static Specification<PaymentCard> filterByUserName(String userName) {
+  public static Specification<PaymentCard> filterByOwnerName(String ownerName) {
     return ((root, query, criteriaBuilder) ->
-            userName == null ? null : criteriaBuilder.equal(root.get(USER_CONST).get(NAME_CONST), userName));
+            ownerName == null ? null : criteriaBuilder.equal(root.get(USER_CONST).get(NAME_CONST), ownerName));
   }
 
-  public static Specification<PaymentCard> filterByUserSurname(String userSurname) {
+  public static Specification<PaymentCard> filterByOwnerSurname(String ownerSurname) {
     return ((root, query, criteriaBuilder) ->
-            userSurname == null ? null : criteriaBuilder.equal(root.get(USER_CONST).get(SURNAME_CONST), userSurname));
+            ownerSurname == null ? null : criteriaBuilder.equal(root.get(USER_CONST).get(SURNAME_CONST), ownerSurname));
   }
 }

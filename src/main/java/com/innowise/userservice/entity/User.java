@@ -43,7 +43,7 @@ public class User {
   private LocalDateTime updatedAt;
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<PaymentCard> paymentCards = new ArrayList<>();
+  private List<PaymentCard> paymentCards = new ArrayList<>();
 
   public User() {
   }
