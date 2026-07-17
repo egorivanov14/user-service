@@ -1,0 +1,29 @@
+package com.innowise.userservice.service;
+
+import com.innowise.userservice.dto.card.CreatePaymentCardRequest;
+import com.innowise.userservice.dto.card.OwnerNameAndSurnameFilterRequest;
+import com.innowise.userservice.dto.card.PaymentCardResponse;
+import com.innowise.userservice.dto.card.UpdatePaymentCardRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+
+import java.util.List;
+
+public interface PaymentCardService {
+
+  PaymentCardResponse create(CreatePaymentCardRequest createPaymentCardRequest);
+
+  PaymentCardResponse update(Long id, UpdatePaymentCardRequest updatePaymentCardRequest);
+
+  PaymentCardResponse findById(Long id);
+
+  void activate(Long id);
+
+  void deactivate(Long id);
+
+  void delete(Long id);
+
+  Page<PaymentCardResponse> findAllByOwnerNameAndSurname(OwnerNameAndSurnameFilterRequest ownerNameAndSurnameFilterRequest, PageRequest pageRequest);
+
+  List<PaymentCardResponse> findAllByUserId(Long userId);
+}
