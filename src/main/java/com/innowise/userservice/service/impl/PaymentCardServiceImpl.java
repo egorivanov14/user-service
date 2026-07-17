@@ -6,6 +6,8 @@ import com.innowise.userservice.dto.card.PaymentCardResponse;
 import com.innowise.userservice.dto.card.UpdatePaymentCardRequest;
 import com.innowise.userservice.entity.PaymentCard;
 import com.innowise.userservice.entity.User;
+import com.innowise.userservice.exception.ConflictException;
+import com.innowise.userservice.exception.NoDataException;
 import com.innowise.userservice.mapper.PaymentCardMapper;
 import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
@@ -41,7 +43,11 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     Long userId = createPaymentCardRequest.userId();
     Optional<User> user = userRepository.findByIdForUpdate(userId);
     if (user.isEmpty()) {
-      throw new RuntimeException(); //todo global exception
+      throw new NoDataException("User not found");
+    }
+    String number = createPaymentCardRequest.number();
+    if (paymentCardRepository.existsByNumber(number)) {
+      throw new ConflictException("Number already in use");
     }
     Long cardCount = paymentCardRepository.countByUserId(userId);
     if (cardCount < MAX_CARDS_PER_USER_CONST) {
@@ -49,7 +55,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
       PaymentCard savedCard = paymentCardRepository.save(paymentCard);
       return paymentCardMapper.paymentCardToResponse(savedCard);
     } else {
-      throw new RuntimeException(); //todo global exception
+      throw new ConflictException("User can have 5 cards maximum");
     }
   }
 
@@ -57,14 +63,17 @@ public class PaymentCardServiceImpl implements PaymentCardService {
   @Transactional
   public PaymentCardResponse update(Long id, UpdatePaymentCardRequest updatePaymentCardRequest) {
     Optional<PaymentCard> paymentCard = paymentCardRepository.findById(id);
-    if (paymentCard.isPresent()) {
-      PaymentCard paymentCardEntity = paymentCard.get();
-      paymentCardMapper.updatePaymentCard(updatePaymentCardRequest, paymentCardEntity);
-      PaymentCard updatedCard = paymentCardRepository.save(paymentCardEntity);
-      return paymentCardMapper.paymentCardToResponse(updatedCard);
-    } else {
-      throw new RuntimeException(); //todo global exception
+    if (paymentCard.isEmpty()) {
+      throw new NoDataException("User not found");
     }
+    String number = updatePaymentCardRequest.number();
+    if (paymentCardRepository.existsByNumber(number)) {
+      throw new ConflictException("Number already in use");
+    }
+    PaymentCard paymentCardEntity = paymentCard.get();
+    paymentCardMapper.updatePaymentCard(updatePaymentCardRequest, paymentCardEntity);
+    PaymentCard updatedCard = paymentCardRepository.save(paymentCardEntity);
+    return paymentCardMapper.paymentCardToResponse(updatedCard);
   }
 
   @Override
@@ -74,25 +83,25 @@ public class PaymentCardServiceImpl implements PaymentCardService {
       PaymentCard paymentCardEntity = paymentCard.get();
       return paymentCardMapper.paymentCardToResponse(paymentCardEntity);
     } else {
-      throw new RuntimeException(); //todo global exception
+      throw new NoDataException("Payment card not found");
     }
   }
 
   @Override
   @Transactional
   public void activate(Long id) {
-    int countRows = paymentCardRepository.activate(id);
-    if (countRows == 0) {
-      throw new RuntimeException(); // todo global exception
+    int countChangedRows = paymentCardRepository.activate(id);
+    if (countChangedRows == 0) {
+      throw new NoDataException("Payment card not found");
     }
   }
 
   @Override
   @Transactional
   public void deactivate(Long id) {
-    int countRows = paymentCardRepository.deactivate(id);
-    if (countRows == 0) {
-      throw new RuntimeException(); // todo global exception
+    int countChangedRows = paymentCardRepository.deactivate(id);
+    if (countChangedRows == 0) {
+      throw new NoDataException("Payment card not found");
     }
   }
 

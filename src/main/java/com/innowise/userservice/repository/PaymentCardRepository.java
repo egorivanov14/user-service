@@ -24,4 +24,6 @@ public interface PaymentCardRepository extends JpaRepository<PaymentCard, Long>,
   int deactivate(@Param("id") Long id);
 
   Long countByUserId(Long user_id);
+
+  boolean existsByNumber(String number);
 }

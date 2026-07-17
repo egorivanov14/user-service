@@ -22,4 +22,6 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
   @Modifying(clearAutomatically = true) //todo @Transactional in UserService
   @Query(value = "UPDATE users SET active = false, updated_at = NOW() WHERE id = :id", nativeQuery = true)
   int deactivate(@Param("id") Long id);
+
+  boolean existsByEmail(String email);
 }
