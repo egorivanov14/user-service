@@ -12,7 +12,7 @@ import com.innowise.userservice.repository.UserRepository;
 import com.innowise.userservice.service.UserService;
 import com.innowise.userservice.specification.UserSpecification;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -94,19 +94,19 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public Page<UserResponse> findAll(PageRequest pageRequest) {
-    Page<User> users = userRepository.findAll(pageRequest);
+  public Page<UserResponse> findAll(Pageable pageable) {
+    Page<User> users = userRepository.findAll(pageable);
     return users.map(userMapper::userToUserResponseEntity);
   }
 
   @Override
-  public Page<UserResponse> findAllAndFilterByNameAndSurname(PageRequest pageRequest, FilterByNameAndSurnameRequest
+  public Page<UserResponse> findAllAndFilterByNameAndSurname(Pageable pageable, FilterByNameAndSurnameRequest
           filterByNameAndSurnameRequest) {
     String name = filterByNameAndSurnameRequest.name();
     String surname = filterByNameAndSurnameRequest.surname();
     Specification<User> nameAndSurnameSpecification = Specification.where(
             UserSpecification.filterByName(name).and(UserSpecification.filterBySurname(surname)));
-    Page<User> users = userRepository.findAll(nameAndSurnameSpecification, pageRequest);
+    Page<User> users = userRepository.findAll(nameAndSurnameSpecification, pageable);
     return users.map(userMapper::userToUserResponseEntity);
   }
 }

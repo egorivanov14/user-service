@@ -13,8 +13,6 @@ import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
 import com.innowise.userservice.service.PaymentCardService;
 import com.innowise.userservice.specification.PaymentCardSpecification;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -112,14 +110,14 @@ public class PaymentCardServiceImpl implements PaymentCardService {
   }
 
   @Override
-  public Page<PaymentCardResponse> findAllByOwnerNameAndSurname(OwnerNameAndSurnameFilterRequest ownerNameAndSurnameFilterRequest, PageRequest pageRequest) {
+  public List<PaymentCardResponse> findAllByOwnerNameAndSurname(OwnerNameAndSurnameFilterRequest ownerNameAndSurnameFilterRequest) {
     String name = ownerNameAndSurnameFilterRequest.name();
     String surname = ownerNameAndSurnameFilterRequest.surname();
     Specification<PaymentCard> specification = Specification.where(
             PaymentCardSpecification.filterByOwnerName(name)
                     .and(PaymentCardSpecification.filterByOwnerSurname(surname)));
-    Page<PaymentCard> paymentCards = paymentCardRepository.findAll(specification, pageRequest);
-    return paymentCards.map(paymentCardMapper::paymentCardToResponse);
+    List<PaymentCard> paymentCards = paymentCardRepository.findAll(specification);
+    return paymentCards.stream().map(paymentCardMapper::paymentCardToResponse).toList();
   }
 
   @Override
