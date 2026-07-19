@@ -1,9 +1,6 @@
 package com.innowise.userservice.controller;
 
-import com.innowise.userservice.dto.user.CreateUserRequest;
-import com.innowise.userservice.dto.user.FilterByNameAndSurnameRequest;
-import com.innowise.userservice.dto.user.UpdateUserRequest;
-import com.innowise.userservice.dto.user.UserResponse;
+import com.innowise.userservice.dto.user.*;
 import com.innowise.userservice.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;

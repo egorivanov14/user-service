@@ -9,8 +9,12 @@ import com.innowise.userservice.exception.ConflictException;
 import com.innowise.userservice.exception.NoDataException;
 import com.innowise.userservice.mapper.UserMapper;
 import com.innowise.userservice.repository.UserRepository;
+import com.innowise.userservice.service.PaymentCardService;
 import com.innowise.userservice.service.UserService;
 import com.innowise.userservice.specification.UserSpecification;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,10 +29,13 @@ public class UserServiceImpl implements UserService {
 
   private final UserMapper userMapper;
   private final UserRepository userRepository;
+  private final PaymentCardService paymentCardService;
 
-  public UserServiceImpl(UserMapper userMapper, UserRepository userRepository) {
+
+  public UserServiceImpl(UserMapper userMapper, UserRepository userRepository, PaymentCardService paymentCardService) {
     this.userMapper = userMapper;
     this.userRepository = userRepository;
+    this.paymentCardService = paymentCardService;
   }
 
   @Override
@@ -49,6 +56,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional
+  @CachePut(value = "users", key = "#id")
   public UserResponse update(Long id, UpdateUserRequest updateUserRequest) {
     Optional<User> optionalUser = userRepository.findById(id);
     if (optionalUser.isEmpty()) {
@@ -66,12 +74,14 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional
+  @CacheEvict(value = "users", key = "#id")
   public void delete(Long id) {
     userRepository.deleteById(id);
   }
 
   @Override
   @Transactional
+  @CacheEvict(value = "users", key = "#id")
   public void activate(Long id) {
     int countRows = userRepository.activate(id);
     if (countRows == 0) {
@@ -81,6 +91,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional
+  @CacheEvict(value = "users", key = "#id")
   public void deactivate(Long id) {
     int countRows = userRepository.deactivate(id);
     if (countRows == 0) {
@@ -89,10 +100,12 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  @Cacheable(value = "users", key = "#id", sync = true)
   public UserResponse findById(Long id) {
     Optional<User> optionalUser = userRepository.findById(id);
     if (optionalUser.isPresent()) {
-      return userMapper.userToUserResponseEntity(optionalUser.get());
+      User user = optionalUser.get();
+      return userMapper.userToUserResponseEntity(user);
     } else {
       throw new NoDataException("User not found");
     }

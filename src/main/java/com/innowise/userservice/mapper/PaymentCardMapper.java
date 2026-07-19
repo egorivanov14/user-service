@@ -13,11 +13,12 @@ public interface PaymentCardMapper {
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "user", ignore = true)
-  @Mapping(target = "number", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "user.id", source = "userId")
   PaymentCard createPaymentCardRequestToEntity(CreatePaymentCardRequest createPaymentCardRequest);
 
+  @Mapping(target = "userId", source = "user.id")
   PaymentCardResponse paymentCardToResponse(PaymentCard paymentCard);
 
   @Mapping(target = "id", ignore = true)

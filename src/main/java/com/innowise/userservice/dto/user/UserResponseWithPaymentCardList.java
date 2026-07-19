@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record UserResponse(
+public record UserResponseWithPaymentCardList(
         Long id,
         String name,
         String surname,
@@ -14,6 +14,7 @@ public record UserResponse(
         String email,
         Boolean active,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        List<PaymentCardResponse> paymentCardList
 ) {
 }
