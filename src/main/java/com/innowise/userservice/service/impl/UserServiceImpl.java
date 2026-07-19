@@ -11,6 +11,7 @@ import com.innowise.userservice.mapper.UserMapper;
 import com.innowise.userservice.repository.UserRepository;
 import com.innowise.userservice.service.UserService;
 import com.innowise.userservice.specification.UserSpecification;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -38,8 +39,12 @@ public class UserServiceImpl implements UserService {
       throw new ConflictException("User with this email already exists");
     }
     User user = userMapper.createUserRequestToEntity(createUserRequest);
-    User savedUser = userRepository.save(user);
-    return userMapper.userToUserResponseEntity(savedUser);
+    try {
+      User savedUser = userRepository.save(user);
+      return userMapper.userToUserResponseEntity(savedUser);
+    } catch (DataIntegrityViolationException e) {
+      throw new ConflictException("User with this email already exists");
+    }
   }
 
   @Override

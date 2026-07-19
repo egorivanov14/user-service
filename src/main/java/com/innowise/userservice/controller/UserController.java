@@ -51,7 +51,7 @@ public class UserController {
     return ResponseEntity.ok().build();
   }
 
-  @PostMapping("/dedactivate/{id}")
+  @PostMapping("/deactivate/{id}")
   public ResponseEntity<Void> deactivate(@PathVariable Long id) {
     userService.deactivate(id);
     return ResponseEntity.ok().build();
@@ -62,7 +62,7 @@ public class UserController {
     return userService.findAll(pageable);
   }
 
-  @GetMapping("/filter")
+  @PostMapping("/filter")
   public Page<UserResponse> getFiltered(@Valid @RequestBody FilterByNameAndSurnameRequest filterByNameAndSurnameRequest, Pageable pageable) {
     return userService.findAllAndFilterByNameAndSurname(pageable, filterByNameAndSurnameRequest);
   }

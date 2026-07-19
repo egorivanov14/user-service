@@ -6,6 +6,8 @@ import com.innowise.userservice.dto.card.PaymentCardResponse;
 import com.innowise.userservice.dto.card.UpdatePaymentCardRequest;
 import com.innowise.userservice.service.PaymentCardService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -59,14 +61,14 @@ public class PaymentCardController {
   }
 
   @GetMapping("/by-user/{id}")
-  public ResponseEntity<List<PaymentCardResponse>> findAll(@PathVariable Long id) {
+  public ResponseEntity<List<PaymentCardResponse>> findAllByUserId(@PathVariable Long id) {
     List<PaymentCardResponse> paymentCardResponseList = paymentCardService.findAllByUserId(id);
     return ResponseEntity.ok(paymentCardResponseList);
   }
 
-  @GetMapping("/by-user/name-surname-filter")
-  public ResponseEntity<List<PaymentCardResponse>> findAllByUserId(@Valid @RequestBody OwnerNameAndSurnameFilterRequest ownerNameAndSurnameFilterRequest) {
-    List<PaymentCardResponse> paymentCardResponseList = paymentCardService.findAllByOwnerNameAndSurname(ownerNameAndSurnameFilterRequest);
+  @PostMapping("/by-user/name-surname-filter")
+  public ResponseEntity<Page<PaymentCardResponse>> findAllByUserNameAndSurname(@Valid @RequestBody OwnerNameAndSurnameFilterRequest ownerNameAndSurnameFilterRequest, Pageable pageable) {
+    Page<PaymentCardResponse> paymentCardResponseList = paymentCardService.findAllByOwnerNameAndSurname(ownerNameAndSurnameFilterRequest, pageable);
     return ResponseEntity.ok(paymentCardResponseList);
   }
 }

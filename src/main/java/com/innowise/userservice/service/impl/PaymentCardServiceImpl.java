@@ -13,6 +13,8 @@ import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
 import com.innowise.userservice.service.PaymentCardService;
 import com.innowise.userservice.specification.PaymentCardSpecification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,7 +55,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
       PaymentCard savedCard = paymentCardRepository.save(paymentCard);
       return paymentCardMapper.paymentCardToResponse(savedCard);
     } else {
-      throw new ConflictException("User can have 5 cards maximum");
+      throw new ConflictException("User can have maximum 5 cards");
     }
   }
 
@@ -110,14 +112,14 @@ public class PaymentCardServiceImpl implements PaymentCardService {
   }
 
   @Override
-  public List<PaymentCardResponse> findAllByOwnerNameAndSurname(OwnerNameAndSurnameFilterRequest ownerNameAndSurnameFilterRequest) {
+  public Page<PaymentCardResponse> findAllByOwnerNameAndSurname(OwnerNameAndSurnameFilterRequest ownerNameAndSurnameFilterRequest, Pageable pageable) {
     String name = ownerNameAndSurnameFilterRequest.name();
     String surname = ownerNameAndSurnameFilterRequest.surname();
     Specification<PaymentCard> specification = Specification.where(
             PaymentCardSpecification.filterByOwnerName(name)
                     .and(PaymentCardSpecification.filterByOwnerSurname(surname)));
-    List<PaymentCard> paymentCards = paymentCardRepository.findAll(specification);
-    return paymentCards.stream().map(paymentCardMapper::paymentCardToResponse).toList();
+    Page<PaymentCard> paymentCards = paymentCardRepository.findAll(specification, pageable);
+    return paymentCards.map(paymentCardMapper::paymentCardToResponse);
   }
 
   @Override
