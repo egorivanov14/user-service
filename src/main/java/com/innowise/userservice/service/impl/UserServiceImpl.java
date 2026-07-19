@@ -5,12 +5,15 @@ import com.innowise.userservice.dto.user.FilterByNameAndSurnameRequest;
 import com.innowise.userservice.dto.user.UpdateUserRequest;
 import com.innowise.userservice.dto.user.UserResponse;
 import com.innowise.userservice.entity.User;
+import com.innowise.userservice.exception.ConflictException;
+import com.innowise.userservice.exception.NoDataException;
 import com.innowise.userservice.mapper.UserMapper;
 import com.innowise.userservice.repository.UserRepository;
 import com.innowise.userservice.service.UserService;
 import com.innowise.userservice.specification.UserSpecification;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,23 +34,34 @@ public class UserServiceImpl implements UserService {
   @Override
   @Transactional
   public UserResponse create(CreateUserRequest createUserRequest) {
+    String email = createUserRequest.email();
+    if (userRepository.existsByEmail(email)) {
+      throw new ConflictException("User with this email already exists");
+    }
     User user = userMapper.createUserRequestToEntity(createUserRequest);
-    User savedUser = userRepository.save(user);
-    return userMapper.userToUserResponseEntity(savedUser);
+    try {
+      User savedUser = userRepository.save(user);
+      return userMapper.userToUserResponseEntity(savedUser);
+    } catch (DataIntegrityViolationException e) {
+      throw new ConflictException("User with this email already exists");
+    }
   }
 
   @Override
   @Transactional
   public UserResponse update(Long id, UpdateUserRequest updateUserRequest) {
     Optional<User> optionalUser = userRepository.findById(id);
-    if (optionalUser.isPresent()) {
-      User user = optionalUser.get();
-      userMapper.updateEntity(updateUserRequest, user);
-      User savedUser = userRepository.save(user);
-      return userMapper.userToUserResponseEntity(savedUser);
-    } else {
-      throw new RuntimeException(); // todo global exception
+    if (optionalUser.isEmpty()) {
+      throw new NoDataException("User not found");
     }
+    String email = updateUserRequest.email();
+    if (email != null && userRepository.existsByEmail(email)) {
+      throw new ConflictException("Email already in use");
+    }
+    User user = optionalUser.get();
+    userMapper.updateEntity(updateUserRequest, user);
+    User savedUser = userRepository.save(user);
+    return userMapper.userToUserResponseEntity(savedUser);
   }
 
   @Override
@@ -61,7 +75,7 @@ public class UserServiceImpl implements UserService {
   public void activate(Long id) {
     int countRows = userRepository.activate(id);
     if (countRows == 0) {
-      throw new RuntimeException(); // todo global exception
+      throw new NoDataException("User not found");
     }
   }
 
@@ -70,7 +84,7 @@ public class UserServiceImpl implements UserService {
   public void deactivate(Long id) {
     int countRows = userRepository.deactivate(id);
     if (countRows == 0) {
-      throw new RuntimeException(); // todo global exception
+      throw new NoDataException("User not found");
     }
   }
 
@@ -80,23 +94,24 @@ public class UserServiceImpl implements UserService {
     if (optionalUser.isPresent()) {
       return userMapper.userToUserResponseEntity(optionalUser.get());
     } else {
-      throw new RuntimeException(); // todo global exception
+      throw new NoDataException("User not found");
     }
   }
 
   @Override
-  public Page<UserResponse> findAll(PageRequest pageRequest) {
-    Page<User> users = userRepository.findAll(pageRequest);
+  public Page<UserResponse> findAll(Pageable pageable) {
+    Page<User> users = userRepository.findAll(pageable);
     return users.map(userMapper::userToUserResponseEntity);
   }
 
   @Override
-  public Page<UserResponse> findAllAndFilterByNameAndSurname(PageRequest pageRequest, FilterByNameAndSurnameRequest filterByNameAndSurnameRequest) {
+  public Page<UserResponse> findAllAndFilterByNameAndSurname(Pageable pageable, FilterByNameAndSurnameRequest
+          filterByNameAndSurnameRequest) {
     String name = filterByNameAndSurnameRequest.name();
     String surname = filterByNameAndSurnameRequest.surname();
     Specification<User> nameAndSurnameSpecification = Specification.where(
             UserSpecification.filterByName(name).and(UserSpecification.filterBySurname(surname)));
-    Page<User> users = userRepository.findAll(nameAndSurnameSpecification, pageRequest);
+    Page<User> users = userRepository.findAll(nameAndSurnameSpecification, pageable);
     return users.map(userMapper::userToUserResponseEntity);
   }
 }

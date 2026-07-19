@@ -15,13 +15,15 @@ public interface PaymentCardRepository extends JpaRepository<PaymentCard, Long>,
 
   List<PaymentCard> findAllByUserId(@Param("user_id") Long userId);
 
-  @Modifying(clearAutomatically = true) //todo @Transaction in PaymentCardService
+  @Modifying(clearAutomatically = true)
   @Query(value = "UPDATE payment_cards SET active = true, updated_at = NOW() WHERE id = :id", nativeQuery = true)
   int activate(@Param("id") Long id);
 
-  @Modifying(clearAutomatically = true) //todo @Transaction in PaymentCardService
+  @Modifying(clearAutomatically = true)
   @Query(value = "UPDATE payment_cards SET active = false, updated_at = NOW() WHERE id = :id", nativeQuery = true)
   int deactivate(@Param("id") Long id);
 
   Long countByUserId(Long user_id);
+
+  boolean existsByNumber(String number);
 }

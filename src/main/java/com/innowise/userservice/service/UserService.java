@@ -5,7 +5,7 @@ import com.innowise.userservice.dto.user.FilterByNameAndSurnameRequest;
 import com.innowise.userservice.dto.user.UpdateUserRequest;
 import com.innowise.userservice.dto.user.UserResponse;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 public interface UserService {
 
@@ -21,7 +21,7 @@ public interface UserService {
 
   void deactivate(Long id);
 
-  Page<UserResponse> findAll(PageRequest pageRequest);
+  Page<UserResponse> findAll(Pageable pageable);
 
-  Page<UserResponse> findAllAndFilterByNameAndSurname(PageRequest pageRequest, FilterByNameAndSurnameRequest filterByNameAndSurnameRequest);
+  Page<UserResponse> findAllAndFilterByNameAndSurname(Pageable pageable, FilterByNameAndSurnameRequest filterByNameAndSurnameRequest);
 }

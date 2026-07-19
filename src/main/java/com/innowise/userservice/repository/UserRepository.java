@@ -15,11 +15,13 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
   @Query("SELECT u FROM User u WHERE u.id = :id")
   Optional<User> findByIdForUpdate(@Param("id") Long id);
 
-  @Modifying(clearAutomatically = true) //todo @Transactional in UserService
+  @Modifying(clearAutomatically = true)
   @Query(value = "UPDATE users SET active = true, updated_at = NOW() WHERE id = :id", nativeQuery = true)
   int activate(@Param("id") Long id);
 
-  @Modifying(clearAutomatically = true) //todo @Transactional in UserService
+  @Modifying(clearAutomatically = true)
   @Query(value = "UPDATE users SET active = false, updated_at = NOW() WHERE id = :id", nativeQuery = true)
   int deactivate(@Param("id") Long id);
+
+  boolean existsByEmail(String email);
 }

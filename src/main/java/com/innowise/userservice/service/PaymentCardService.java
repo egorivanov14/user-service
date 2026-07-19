@@ -5,7 +5,7 @@ import com.innowise.userservice.dto.card.OwnerNameAndSurnameFilterRequest;
 import com.innowise.userservice.dto.card.PaymentCardResponse;
 import com.innowise.userservice.dto.card.UpdatePaymentCardRequest;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -23,7 +23,7 @@ public interface PaymentCardService {
 
   void delete(Long id);
 
-  Page<PaymentCardResponse> findAllByOwnerNameAndSurname(OwnerNameAndSurnameFilterRequest ownerNameAndSurnameFilterRequest, PageRequest pageRequest);
-
   List<PaymentCardResponse> findAllByUserId(Long userId);
+
+  Page<PaymentCardResponse> findAllByOwnerNameAndSurname(OwnerNameAndSurnameFilterRequest ownerNameAndSurnameFilterRequest, Pageable pageable);
 }
