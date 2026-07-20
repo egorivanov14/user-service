@@ -1,9 +1,6 @@
 package com.innowise.userservice.service;
 
-import com.innowise.userservice.dto.user.CreateUserRequest;
-import com.innowise.userservice.dto.user.FilterByNameAndSurnameRequest;
-import com.innowise.userservice.dto.user.UpdateUserRequest;
-import com.innowise.userservice.dto.user.UserResponse;
+import com.innowise.userservice.dto.user.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

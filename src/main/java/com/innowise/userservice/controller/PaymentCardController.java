@@ -1,7 +1,7 @@
 package com.innowise.userservice.controller;
 
 import com.innowise.userservice.dto.card.CreatePaymentCardRequest;
-import com.innowise.userservice.dto.card.OwnerNameAndSurnameFilterRequest;
+import com.innowise.userservice.dto.card.FilterByOwnerNameAndSurnameRequest;
 import com.innowise.userservice.dto.card.PaymentCardResponse;
 import com.innowise.userservice.dto.card.UpdatePaymentCardRequest;
 import com.innowise.userservice.service.PaymentCardService;
@@ -67,8 +67,8 @@ public class PaymentCardController {
   }
 
   @PostMapping("/by-user/name-surname-filter")
-  public ResponseEntity<Page<PaymentCardResponse>> findAllByUserNameAndSurname(@Valid @RequestBody OwnerNameAndSurnameFilterRequest ownerNameAndSurnameFilterRequest, Pageable pageable) {
-    Page<PaymentCardResponse> paymentCardResponseList = paymentCardService.findAllByOwnerNameAndSurname(ownerNameAndSurnameFilterRequest, pageable);
+  public ResponseEntity<Page<PaymentCardResponse>> findAllByUserNameAndSurname(@Valid @RequestBody FilterByOwnerNameAndSurnameRequest filterByOwnerNameAndSurnameRequest, Pageable pageable) {
+    Page<PaymentCardResponse> paymentCardResponseList = paymentCardService.findAllByOwnerNameAndSurname(filterByOwnerNameAndSurnameRequest, pageable);
     return ResponseEntity.ok(paymentCardResponseList);
   }
 }

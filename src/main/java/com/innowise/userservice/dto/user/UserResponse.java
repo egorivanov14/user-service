@@ -14,7 +14,6 @@ public record UserResponse(
         String email,
         Boolean active,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt,
-        List<PaymentCardResponse> paymentCards
+        LocalDateTime updatedAt
 ) {
 }

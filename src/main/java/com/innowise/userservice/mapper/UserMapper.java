@@ -16,7 +16,6 @@ public interface UserMapper {
   @Mapping(target = "paymentCards", ignore = true)
   User createUserRequestToEntity(CreateUserRequest createUserRequest);
 
-  @Mapping(target = "paymentCards", ignore = true)
   UserResponse userToUserResponseEntity(User user);
 
   @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

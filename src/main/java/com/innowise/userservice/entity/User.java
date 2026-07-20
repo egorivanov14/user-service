@@ -108,6 +108,10 @@ public class User {
     return paymentCards;
   }
 
+  public void setPaymentCards(List<PaymentCard> paymentCards) {
+    this.paymentCards = paymentCards;
+  }
+
   public void addPaymentCard(PaymentCard paymentCard) {
     this.paymentCards.add(paymentCard);
   }

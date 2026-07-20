@@ -1,7 +1,7 @@
 package com.innowise.userservice.service.impl;
 
 import com.innowise.userservice.dto.card.CreatePaymentCardRequest;
-import com.innowise.userservice.dto.card.OwnerNameAndSurnameFilterRequest;
+import com.innowise.userservice.dto.card.FilterByOwnerNameAndSurnameRequest;
 import com.innowise.userservice.dto.card.PaymentCardResponse;
 import com.innowise.userservice.dto.card.UpdatePaymentCardRequest;
 import com.innowise.userservice.entity.PaymentCard;
@@ -13,6 +13,9 @@ import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
 import com.innowise.userservice.service.PaymentCardService;
 import com.innowise.userservice.specification.PaymentCardSpecification;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -61,13 +64,14 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
   @Override
   @Transactional
+  @CachePut(value = "payment_cards", key = "#id")
   public PaymentCardResponse update(Long id, UpdatePaymentCardRequest updatePaymentCardRequest) {
     Optional<PaymentCard> paymentCard = paymentCardRepository.findById(id);
     if (paymentCard.isEmpty()) {
-      throw new NoDataException("User not found");
+      throw new NoDataException("Payment card not found");
     }
     String number = updatePaymentCardRequest.number();
-    if (paymentCardRepository.existsByNumber(number)) {
+    if (number != null && paymentCardRepository.existsByNumber(number)) {
       throw new ConflictException("Number already in use");
     }
     PaymentCard paymentCardEntity = paymentCard.get();
@@ -77,6 +81,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
   }
 
   @Override
+  @Cacheable(value = "payment_cards", key = "#id", sync = true)
   public PaymentCardResponse findById(Long id) {
     Optional<PaymentCard> paymentCard = paymentCardRepository.findById(id);
     if (paymentCard.isPresent()) {
@@ -89,6 +94,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
   @Override
   @Transactional
+  @CacheEvict(value = "payment_cards", key = "#id")
   public void activate(Long id) {
     int countChangedRows = paymentCardRepository.activate(id);
     if (countChangedRows == 0) {
@@ -98,6 +104,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
   @Override
   @Transactional
+  @CacheEvict(value = "payment_cards", key = "#id")
   public void deactivate(Long id) {
     int countChangedRows = paymentCardRepository.deactivate(id);
     if (countChangedRows == 0) {
@@ -107,14 +114,20 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
   @Override
   @Transactional
+  @CacheEvict(value = "payment_cards", key = "#id")
   public void delete(Long id) {
     paymentCardRepository.deleteById(id);
   }
 
   @Override
-  public Page<PaymentCardResponse> findAllByOwnerNameAndSurname(OwnerNameAndSurnameFilterRequest ownerNameAndSurnameFilterRequest, Pageable pageable) {
-    String name = ownerNameAndSurnameFilterRequest.name();
-    String surname = ownerNameAndSurnameFilterRequest.surname();
+  @CacheEvict(value = "payment_cards", key = "#id")
+  public void evictCache(Long id) {
+  }
+
+  @Override
+  public Page<PaymentCardResponse> findAllByOwnerNameAndSurname(FilterByOwnerNameAndSurnameRequest filterByOwnerNameAndSurnameRequest, Pageable pageable) {
+    String name = filterByOwnerNameAndSurnameRequest.name();
+    String surname = filterByOwnerNameAndSurnameRequest.surname();
     Specification<PaymentCard> specification = Specification.where(
             PaymentCardSpecification.filterByOwnerName(name)
                     .and(PaymentCardSpecification.filterByOwnerSurname(surname)));
