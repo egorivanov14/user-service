@@ -16,8 +16,6 @@ public class CacheConfig {
 
   @Bean
   public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
-    // разрешаем полиморфную десериализацию только для своих DTO и стандартных коллекций —
-    // не для всего подряд, это открытая дверь для deserialization-атак
     PolymorphicTypeValidator typeValidator = BasicPolymorphicTypeValidator.builder()
             .allowIfSubType("com.innowise.userservice.dto")
             .allowIfSubType("java.util")

@@ -1,14 +1,10 @@
 package com.innowise.userservice.mapper;
 
-import com.innowise.userservice.dto.card.PaymentCardResponse;
 import com.innowise.userservice.dto.user.CreateUserRequest;
 import com.innowise.userservice.dto.user.UpdateUserRequest;
 import com.innowise.userservice.dto.user.UserResponse;
-import com.innowise.userservice.dto.user.UserResponseWithPaymentCardList;
 import com.innowise.userservice.entity.User;
 import org.mapstruct.*;
-
-import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
