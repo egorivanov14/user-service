@@ -75,12 +75,12 @@ public class UserServiceImpl implements UserService {
   @Transactional
   @CacheEvict(value = "users", key = "#id")
   public void delete(Long id) {
-    userRepository.deleteById(id);
     List<PaymentCard> paymentCardList = paymentCardRepository.findAllByUserId(id);
     paymentCardList.forEach(paymentCard -> {
       Long paymentCardId = paymentCard.getId();
       paymentCardService.evictCache(paymentCardId);
     });
+    userRepository.deleteById(id);
   }
 
   @Override

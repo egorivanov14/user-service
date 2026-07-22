@@ -19,6 +19,7 @@ public record CreateUserRequest(
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         LocalDate birthDate,
 
+        @NotBlank
         @Email(message = "invalid format of email")
         String email
 ) {

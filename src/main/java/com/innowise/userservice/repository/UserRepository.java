@@ -24,4 +24,6 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
   int deactivate(@Param("id") Long id);
 
   boolean existsByEmail(String email);
+
+  Optional<User> findByEmail(String email);
 }
