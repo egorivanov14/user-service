@@ -70,12 +70,7 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
     CreatePaymentCardRequest request = new CreatePaymentCardRequest(
             userId, CARD_NUMBER, HOLDER, EXPIRE_DATE
     );
-    String jsonCreatePaymentCardRequest = objectMapper.writeValueAsString(request);
-
-    mockMvc.perform(post("/api/payment-cards/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(jsonCreatePaymentCardRequest))
-            .andExpect(status().isCreated());
+    createPaymentCard(request);
 
     PaymentCard paymentCard = paymentCardRepository.findByNumber(CARD_NUMBER).orElseThrow(()->new NoDataException("Payment card no found"));
 
@@ -90,12 +85,7 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
     CreatePaymentCardRequest request = new CreatePaymentCardRequest(
             userId, CARD_NUMBER, HOLDER, EXPIRE_DATE
     );
-    String jsonCreatePaymentCardRequest = objectMapper.writeValueAsString(request);
-
-    mockMvc.perform(post("/api/payment-cards/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(jsonCreatePaymentCardRequest))
-            .andExpect(status().isCreated());
+    createPaymentCard(request);
 
     PaymentCard paymentCard = paymentCardRepository.findByNumber(CARD_NUMBER).orElseThrow(()->new NoDataException("Payment card no found"));
     Long paymentCardId = paymentCard.getId();
@@ -119,12 +109,7 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
     CreatePaymentCardRequest request = new CreatePaymentCardRequest(
             userId, CARD_NUMBER, HOLDER, EXPIRE_DATE
     );
-    String jsonCreatePaymentCardRequest = objectMapper.writeValueAsString(request);
-
-    mockMvc.perform(post("/api/payment-cards/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(jsonCreatePaymentCardRequest))
-            .andExpect(status().isCreated());
+    createPaymentCard(request);
 
     PaymentCard paymentCard = paymentCardRepository.findByNumber(CARD_NUMBER).orElseThrow(()->new NoDataException("Payment card no found"));
     Long paymentCardId = paymentCard.getId();
@@ -143,12 +128,7 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
     CreatePaymentCardRequest request = new CreatePaymentCardRequest(
             userId, CARD_NUMBER, HOLDER, EXPIRE_DATE
     );
-    String jsonCreatePaymentCardRequest = objectMapper.writeValueAsString(request);
-
-    mockMvc.perform(post("/api/payment-cards/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(jsonCreatePaymentCardRequest))
-            .andExpect(status().isCreated());
+    createPaymentCard(request);
 
     PaymentCard paymentCard = paymentCardRepository.findByNumber(CARD_NUMBER).orElseThrow(()->new NoDataException("Payment card no found"));
     Long paymentCardId = paymentCard.getId();
@@ -163,12 +143,7 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
     CreatePaymentCardRequest request = new CreatePaymentCardRequest(
             userId, CARD_NUMBER, HOLDER, EXPIRE_DATE
     );
-    String jsonCreatePaymentCardRequest = objectMapper.writeValueAsString(request);
-
-    mockMvc.perform(post("/api/payment-cards/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(jsonCreatePaymentCardRequest))
-            .andExpect(status().isCreated());
+    createPaymentCard(request);
 
     PaymentCard paymentCard = paymentCardRepository.findByNumber(CARD_NUMBER).orElseThrow(()->new NoDataException("Payment card no found"));
     Long paymentCardId = paymentCard.getId();
@@ -187,12 +162,7 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
     CreatePaymentCardRequest request = new CreatePaymentCardRequest(
             userId, CARD_NUMBER, HOLDER, EXPIRE_DATE
     );
-    String jsonCreatePaymentCardRequest = objectMapper.writeValueAsString(request);
-
-    mockMvc.perform(post("/api/payment-cards/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(jsonCreatePaymentCardRequest))
-            .andExpect(status().isCreated());
+    createPaymentCard(request);
 
     PaymentCard paymentCard = paymentCardRepository.findByNumber(CARD_NUMBER).orElseThrow(()->new NoDataException("Payment card no found"));
     Long paymentCardId = paymentCard.getId();
@@ -210,12 +180,7 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
     CreatePaymentCardRequest request = new CreatePaymentCardRequest(
             userId, CARD_NUMBER, HOLDER, EXPIRE_DATE
     );
-    String jsonCreatePaymentCardRequest = objectMapper.writeValueAsString(request);
-
-    mockMvc.perform(post("/api/payment-cards/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(jsonCreatePaymentCardRequest))
-            .andExpect(status().isCreated());
+    createPaymentCard(request);
 
     mockMvc.perform(get("/api/payment-cards/by-user/{id}", userId)
                     .contentType(MediaType.APPLICATION_JSON))
@@ -229,12 +194,7 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
     CreatePaymentCardRequest request = new CreatePaymentCardRequest(
             userId, CARD_NUMBER, HOLDER, EXPIRE_DATE
     );
-    String jsonCreatePaymentCardRequest = objectMapper.writeValueAsString(request);
-
-    mockMvc.perform(post("/api/payment-cards/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(jsonCreatePaymentCardRequest))
-            .andExpect(status().isCreated());
+    createPaymentCard(request);
 
     FilterByOwnerNameAndSurnameRequest filterRequest = new FilterByOwnerNameAndSurnameRequest(NAME, SURNAME);
     String jsonFilter = objectMapper.writeValueAsString(filterRequest);
@@ -247,5 +207,14 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content").isArray())
             .andExpect(jsonPath("$.content[0].holder").value(HOLDER));
+  }
+
+  private void createPaymentCard(CreatePaymentCardRequest createPaymentCardRequest) throws Exception {
+    String jsonCreatePaymentCardRequest = objectMapper.writeValueAsString(createPaymentCardRequest);
+
+    mockMvc.perform(post("/api/payment-cards/create")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(jsonCreatePaymentCardRequest))
+            .andExpect(status().isCreated());
   }
 }

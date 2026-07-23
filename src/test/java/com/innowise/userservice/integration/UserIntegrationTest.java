@@ -50,13 +50,7 @@ public class UserIntegrationTest extends AbstractIntegrationTest {
   @Test
   void create_shouldCreateUser() throws Exception {
     CreateUserRequest createUserRequest = new CreateUserRequest(NAME, SURNAME, BIRTH_DATE, EMAIL);
-    String jsonRequest = objectMapper.writeValueAsString(createUserRequest);
-
-    mockMvc.perform(
-            post("/api/users/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(jsonRequest)
-    ).andExpect(status().isCreated());
+    createUser(createUserRequest);
 
     User user = userRepository.findByEmail(EMAIL).orElseThrow(() -> new NoDataException("User not found"));
     assertEquals(EMAIL, user.getEmail());
@@ -68,14 +62,10 @@ public class UserIntegrationTest extends AbstractIntegrationTest {
   @Test
   void create_duplicatedEmail_shouldThrowConflictException() throws Exception {
     CreateUserRequest createUserRequest = new CreateUserRequest(NAME, SURNAME, BIRTH_DATE, EMAIL);
+
+    createUser(createUserRequest);
+
     String jsonRequest = objectMapper.writeValueAsString(createUserRequest);
-
-    mockMvc.perform(
-            post("/api/users/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(jsonRequest)
-    ).andExpect(status().isCreated());
-
     mockMvc.perform(
             post("/api/users/create")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -86,13 +76,7 @@ public class UserIntegrationTest extends AbstractIntegrationTest {
   @Test
   void update_shouldUpdateUser() throws Exception {
     CreateUserRequest createUserRequest = new CreateUserRequest(NAME, SURNAME, BIRTH_DATE, EMAIL);
-    String jsonRequest = objectMapper.writeValueAsString(createUserRequest);
-
-    mockMvc.perform(
-            post("/api/users/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(jsonRequest)
-    ).andExpect(status().isCreated());
+    createUser(createUserRequest);
 
     UpdateUserRequest updateUserRequest = new UpdateUserRequest(null, null, null, UPDATE_EMAIL);
     String jsonUpdateRequest = objectMapper.writeValueAsString(updateUserRequest);
@@ -117,13 +101,7 @@ public class UserIntegrationTest extends AbstractIntegrationTest {
   @Test
   void delete_shouldDeleteUser() throws Exception {
     CreateUserRequest createUserRequest = new CreateUserRequest(NAME, SURNAME, BIRTH_DATE, EMAIL);
-    String jsonRequest = objectMapper.writeValueAsString(createUserRequest);
-
-    mockMvc.perform(
-            post("/api/users/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(jsonRequest)
-    ).andExpect(status().isCreated());
+    createUser(createUserRequest);
 
     User user = userRepository.findByEmail(EMAIL).orElseThrow(() -> new NoDataException("User not found"));
     Long userId = user.getId();
@@ -134,19 +112,13 @@ public class UserIntegrationTest extends AbstractIntegrationTest {
     ).andExpect(status().isOk());
 
     Optional<User> userOptional = userRepository.findById(userId);
-    assertFalse(userOptional.isPresent());
+    assertTrue(userOptional.isEmpty());
   }
 
   @Test
   void activate_shouldActivateUser() throws Exception {
     CreateUserRequest createUserRequest = new CreateUserRequest(NAME, SURNAME, BIRTH_DATE, EMAIL);
-    String jsonRequest = objectMapper.writeValueAsString(createUserRequest);
-
-    mockMvc.perform(
-            post("/api/users/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(jsonRequest)
-    ).andExpect(status().isCreated());
+    createUser(createUserRequest);
 
     User user = userRepository.findByEmail(EMAIL).orElseThrow(() -> new NoDataException("User not found"));
     Long userId = user.getId();
@@ -155,18 +127,15 @@ public class UserIntegrationTest extends AbstractIntegrationTest {
             post("/api/users/activate/{id}", userId)
                     .contentType(MediaType.APPLICATION_JSON)
     ).andExpect(status().isOk());
+
+    User activatedUser = userRepository.findById(userId).orElseThrow(() -> new NoDataException("User not found"));
+    assertTrue(activatedUser.getActive());
   }
 
   @Test
   void deactivate_shouldDeactivateUser() throws Exception {
     CreateUserRequest createUserRequest = new CreateUserRequest(NAME, SURNAME, BIRTH_DATE, EMAIL);
-    String jsonRequest = objectMapper.writeValueAsString(createUserRequest);
-
-    mockMvc.perform(
-            post("/api/users/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(jsonRequest)
-    ).andExpect(status().isCreated());
+    createUser(createUserRequest);
 
     User user = userRepository.findByEmail(EMAIL).orElseThrow(() -> new NoDataException("User not found"));
     Long userId = user.getId();
@@ -183,38 +152,24 @@ public class UserIntegrationTest extends AbstractIntegrationTest {
   @Test
   void findById_shouldReturnUserResponse() throws Exception {
     CreateUserRequest createUserRequest = new CreateUserRequest(NAME, SURNAME, BIRTH_DATE, EMAIL);
-    String jsonRequest = objectMapper.writeValueAsString(createUserRequest);
-
-    mockMvc.perform(
-            post("/api/users/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(jsonRequest)
-    ).andExpect(status().isCreated());
+    createUser(createUserRequest);
 
     User user = userRepository.findByEmail(EMAIL).orElseThrow(() -> new NoDataException("User not found"));
     Long userId = user.getId();
 
     mockMvc.perform(
             get("/api/users/get/{id}", userId)
-            .contentType(MediaType.APPLICATION_JSON)).andExpect(result ->
-            {
-              assertEquals(EMAIL, user.getEmail());
-              assertEquals(NAME, user.getName());
-              assertEquals(BIRTH_DATE, user.getBirthDate());
-              assertEquals(SURNAME, user.getSurname());
-              assertEquals(userId, user.getId());
-            });
+            .contentType(MediaType.APPLICATION_JSON)).andExpect(jsonPath("$.id").value(userId))
+            .andExpect(jsonPath("$.name").value(user.getName()))
+            .andExpect(jsonPath("$.surname").value(user.getSurname()))
+            .andExpect(jsonPath("$.birthDate").value(user.getBirthDate().toString()))
+            .andExpect(jsonPath("$.email").value(user.getEmail()));
   }
 
   @Test
   void getAll_shouldReturnPageOfUsers() throws Exception {
     CreateUserRequest createUserRequest = new CreateUserRequest(NAME, SURNAME, BIRTH_DATE, EMAIL);
-    String jsonRequest = objectMapper.writeValueAsString(createUserRequest);
-
-    mockMvc.perform(post("/api/users/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(jsonRequest))
-            .andExpect(status().isCreated());
+    createUser(createUserRequest);
 
     mockMvc.perform(get("/api/users")
                     .param("page", "0")
@@ -227,12 +182,7 @@ public class UserIntegrationTest extends AbstractIntegrationTest {
   @Test
   void getFiltered_shouldReturnFilteredUsers() throws Exception {
     CreateUserRequest createUserRequest = new CreateUserRequest(NAME, SURNAME, BIRTH_DATE, EMAIL);
-    String jsonRequest = objectMapper.writeValueAsString(createUserRequest);
-
-    mockMvc.perform(post("/api/users/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(jsonRequest))
-            .andExpect(status().isCreated());
+    createUser(createUserRequest);
 
     FilterByNameAndSurnameRequest filterRequest = new FilterByNameAndSurnameRequest(NAME, SURNAME);
     String jsonFilterRequest = objectMapper.writeValueAsString(filterRequest);
@@ -245,5 +195,15 @@ public class UserIntegrationTest extends AbstractIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content").isArray())
             .andExpect(jsonPath("$.content[0].email").value(EMAIL));
+  }
+
+  private void createUser(CreateUserRequest createUserRequest) throws Exception {
+    String jsonRequest = objectMapper.writeValueAsString(createUserRequest);
+
+    mockMvc.perform(
+            post("/api/users/create")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(jsonRequest)
+    ).andExpect(status().isCreated());
   }
 }
