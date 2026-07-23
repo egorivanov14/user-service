@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: user-service
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  data:
+    redis:
+      timeout: 2000ms
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/changelog-master.yml
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: validate

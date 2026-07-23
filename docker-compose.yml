@@ -19,6 +19,18 @@ services:
     volumes:
       - redisdata:/data
 
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+
 volumes:
   pgdata:
   redisdata:

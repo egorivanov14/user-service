@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    hikari:
+      connection-timeout: 2000
+      max-lifetime: 30000
+  data:
+    redis:
+      timeout: 2000ms
+      lettuce:
+        shutdown-timeout: 100ms

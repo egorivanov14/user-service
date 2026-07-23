@@ -1,6 +1,5 @@
 package com.innowise.userservice.integration;
 
-import com.innowise.userservice.controller.UserController;
 import com.innowise.userservice.dto.user.CreateUserRequest;
 import com.innowise.userservice.dto.user.FilterByNameAndSurnameRequest;
 import com.innowise.userservice.dto.user.UpdateUserRequest;
@@ -12,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -25,6 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class UserIntegrationTest extends AbstractIntegrationTest {
 
   @Autowired
@@ -158,8 +159,8 @@ public class UserIntegrationTest extends AbstractIntegrationTest {
     Long userId = user.getId();
 
     mockMvc.perform(
-            get("/api/users/get/{id}", userId)
-            .contentType(MediaType.APPLICATION_JSON)).andExpect(jsonPath("$.id").value(userId))
+                    get("/api/users/get/{id}", userId)
+                            .contentType(MediaType.APPLICATION_JSON)).andExpect(jsonPath("$.id").value(userId))
             .andExpect(jsonPath("$.name").value(user.getName()))
             .andExpect(jsonPath("$.surname").value(user.getSurname()))
             .andExpect(jsonPath("$.birthDate").value(user.getBirthDate().toString()))
