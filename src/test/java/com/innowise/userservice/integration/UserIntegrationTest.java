@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -117,6 +118,7 @@ public class UserIntegrationTest extends AbstractIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void activate_shouldActivateUser() throws Exception {
     CreateUserRequest createUserRequest = new CreateUserRequest(NAME, SURNAME, BIRTH_DATE, EMAIL);
     createUser(createUserRequest);
@@ -134,6 +136,7 @@ public class UserIntegrationTest extends AbstractIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void deactivate_shouldDeactivateUser() throws Exception {
     CreateUserRequest createUserRequest = new CreateUserRequest(NAME, SURNAME, BIRTH_DATE, EMAIL);
     createUser(createUserRequest);
@@ -151,6 +154,7 @@ public class UserIntegrationTest extends AbstractIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void findById_shouldReturnUserResponse() throws Exception {
     CreateUserRequest createUserRequest = new CreateUserRequest(NAME, SURNAME, BIRTH_DATE, EMAIL);
     createUser(createUserRequest);
@@ -168,6 +172,7 @@ public class UserIntegrationTest extends AbstractIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getAll_shouldReturnPageOfUsers() throws Exception {
     CreateUserRequest createUserRequest = new CreateUserRequest(NAME, SURNAME, BIRTH_DATE, EMAIL);
     createUser(createUserRequest);
@@ -181,6 +186,7 @@ public class UserIntegrationTest extends AbstractIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getFiltered_shouldReturnFilteredUsers() throws Exception {
     CreateUserRequest createUserRequest = new CreateUserRequest(NAME, SURNAME, BIRTH_DATE, EMAIL);
     createUser(createUserRequest);
