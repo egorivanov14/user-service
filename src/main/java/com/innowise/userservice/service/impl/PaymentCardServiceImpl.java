@@ -11,11 +11,10 @@ import com.innowise.userservice.exception.NoDataException;
 import com.innowise.userservice.mapper.PaymentCardMapper;
 import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
+import com.innowise.userservice.security.HashService;
 import com.innowise.userservice.service.PaymentCardService;
 import com.innowise.userservice.specification.PaymentCardSpecification;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -33,11 +32,13 @@ public class PaymentCardServiceImpl implements PaymentCardService {
   private final PaymentCardRepository paymentCardRepository;
   private final PaymentCardMapper paymentCardMapper;
   private final UserRepository userRepository;
+  private final HashService  hashService;
 
-  public PaymentCardServiceImpl(PaymentCardRepository paymentCardRepository, PaymentCardMapper paymentCardMapper, UserRepository userRepository) {
+  public PaymentCardServiceImpl(PaymentCardRepository paymentCardRepository, PaymentCardMapper paymentCardMapper, UserRepository userRepository,  HashService hashService) {
     this.paymentCardRepository = paymentCardRepository;
     this.paymentCardMapper = paymentCardMapper;
     this.userRepository = userRepository;
+    this.hashService = hashService;
   }
 
   @Override
@@ -52,9 +53,11 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     if (paymentCardRepository.existsByNumber(number)) {
       throw new ConflictException("Number already in use");
     }
-    Long cardCount = paymentCardRepository.countByUserId(userId);
+    Long cardCount = paymentCardRepository.countByUserIdAndActiveIsTrue(userId);
     if (cardCount < MAX_CARDS_PER_USER_CONST) {
       PaymentCard paymentCard = paymentCardMapper.createPaymentCardRequestToEntity(createPaymentCardRequest);
+      String hashedNumber = hashService.sha256(number);
+      paymentCard.setNumber(hashedNumber);
       PaymentCard savedCard = paymentCardRepository.save(paymentCard);
       return paymentCardMapper.paymentCardToResponse(savedCard);
     } else {
@@ -64,24 +67,21 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
   @Override
   @Transactional
-  @CachePut(value = "payment_cards", key = "#id")
   public PaymentCardResponse update(Long id, UpdatePaymentCardRequest updatePaymentCardRequest) {
     Optional<PaymentCard> paymentCard = paymentCardRepository.findById(id);
     if (paymentCard.isEmpty()) {
       throw new NoDataException("Payment card not found");
     }
-    String number = updatePaymentCardRequest.number();
-    if (number != null && paymentCardRepository.existsByNumber(number)) {
-      throw new ConflictException("Number already in use");
-    }
+
     PaymentCard paymentCardEntity = paymentCard.get();
     paymentCardMapper.updatePaymentCard(updatePaymentCardRequest, paymentCardEntity);
     PaymentCard updatedCard = paymentCardRepository.save(paymentCardEntity);
+    Long userId = paymentCardEntity.getUser().getId();
+    evictUserCache(userId);
     return paymentCardMapper.paymentCardToResponse(updatedCard);
   }
 
   @Override
-  @Cacheable(value = "payment_cards", key = "#id", sync = true)
   public PaymentCardResponse findById(Long id) {
     Optional<PaymentCard> paymentCard = paymentCardRepository.findById(id);
     if (paymentCard.isPresent()) {
@@ -94,34 +94,32 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
   @Override
   @Transactional
-  @CacheEvict(value = "payment_cards", key = "#id")
   public void activate(Long id) {
     int countChangedRows = paymentCardRepository.activate(id);
     if (countChangedRows == 0) {
       throw new NoDataException("Payment card not found");
     }
+    Long userId = paymentCardRepository.getUserIdById(id).orElseThrow(()-> new NoDataException("Card not found"));
+    evictUserCache(userId);
   }
 
   @Override
   @Transactional
-  @CacheEvict(value = "payment_cards", key = "#id")
   public void deactivate(Long id) {
     int countChangedRows = paymentCardRepository.deactivate(id);
     if (countChangedRows == 0) {
       throw new NoDataException("Payment card not found");
     }
+    Long userId = paymentCardRepository.getUserIdById(id).orElseThrow(()-> new NoDataException("Card not found"));
+    evictUserCache(userId);
   }
 
   @Override
   @Transactional
-  @CacheEvict(value = "payment_cards", key = "#id")
   public void delete(Long id) {
+    Long userId = paymentCardRepository.getUserIdById(id).orElseThrow(()-> new NoDataException("Card not found"));
     paymentCardRepository.deleteById(id);
-  }
-
-  @Override
-  @CacheEvict(value = "payment_cards", key = "#id")
-  public void evictCache(Long id) {
+    evictUserCache(userId);
   }
 
   @Override
@@ -139,5 +137,9 @@ public class PaymentCardServiceImpl implements PaymentCardService {
   public List<PaymentCardResponse> findAllByUserId(Long userId) {
     List<PaymentCard> paymentCards = paymentCardRepository.findAllByUserId(userId);
     return paymentCards.stream().map(paymentCardMapper::paymentCardToResponse).toList();
+  }
+
+  @CacheEvict(value = "users", key = "#userId")
+  public void evictUserCache(Long userId) {
   }
 }

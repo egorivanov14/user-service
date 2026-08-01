@@ -8,3 +8,6 @@ spring:
       timeout: 2000ms
       lettuce:
         shutdown-timeout: 100ms
+
+jwt:
+  secret: test-secret-key-test-secret-key-test-secret-key

@@ -1,5 +1,6 @@
 package com.innowise.userservice.service.impl;
 
+import com.innowise.userservice.dto.card.PaymentCardResponse;
 import com.innowise.userservice.dto.user.CreateUserRequest;
 import com.innowise.userservice.dto.user.FilterByNameAndSurnameRequest;
 import com.innowise.userservice.dto.user.UpdateUserRequest;
@@ -8,6 +9,7 @@ import com.innowise.userservice.entity.PaymentCard;
 import com.innowise.userservice.entity.User;
 import com.innowise.userservice.exception.ConflictException;
 import com.innowise.userservice.exception.NoDataException;
+import com.innowise.userservice.mapper.PaymentCardMapper;
 import com.innowise.userservice.mapper.UserMapper;
 import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
@@ -24,21 +26,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
 
   private final UserMapper userMapper;
   private final UserRepository userRepository;
-  private final PaymentCardService paymentCardService;
   private final PaymentCardRepository paymentCardRepository;
+  private final PaymentCardMapper paymentCardMapper;
 
-  public UserServiceImpl(UserMapper userMapper, UserRepository userRepository, PaymentCardService paymentCardService, PaymentCardRepository paymentCardRepository) {
+  public UserServiceImpl(UserMapper userMapper, UserRepository userRepository, PaymentCardRepository paymentCardRepository, PaymentCardMapper paymentCardMapper) {
     this.userMapper = userMapper;
     this.userRepository = userRepository;
-    this.paymentCardService = paymentCardService;
     this.paymentCardRepository = paymentCardRepository;
+    this.paymentCardMapper = paymentCardMapper;
   }
 
   @Override
@@ -50,7 +54,7 @@ public class UserServiceImpl implements UserService {
     }
     User user = userMapper.createUserRequestToEntity(createUserRequest);
     User savedUser = userRepository.save(user);
-    return userMapper.userToUserResponseEntity(savedUser);
+    return userMapper.userToUserResponseEntity(savedUser, List.of());
   }
 
   @Override
@@ -68,18 +72,15 @@ public class UserServiceImpl implements UserService {
     User user = optionalUser.get();
     userMapper.updateEntity(updateUserRequest, user);
     User savedUser = userRepository.save(user);
-    return userMapper.userToUserResponseEntity(savedUser);
+    List<PaymentCard> paymentCards = paymentCardRepository.findAllByUserId(id);
+    List<PaymentCardResponse> paymentCardsResponse = paymentCards.stream().map(paymentCardMapper::paymentCardToResponse).toList();
+    return userMapper.userToUserResponseEntity(savedUser, paymentCardsResponse);
   }
 
   @Override
   @Transactional
   @CacheEvict(value = "users", key = "#id")
   public void delete(Long id) {
-    List<PaymentCard> paymentCardList = paymentCardRepository.findAllByUserId(id);
-    paymentCardList.forEach(paymentCard -> {
-      Long paymentCardId = paymentCard.getId();
-      paymentCardService.evictCache(paymentCardId);
-    });
     userRepository.deleteById(id);
   }
 
@@ -109,7 +110,9 @@ public class UserServiceImpl implements UserService {
     Optional<User> optionalUser = userRepository.findById(id);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      return userMapper.userToUserResponseEntity(user);
+      List<PaymentCard> paymentCards = paymentCardRepository.findAllByUserId(id);
+      List<PaymentCardResponse> paymentCardsResponse = paymentCards.stream().map(paymentCardMapper::paymentCardToResponse).toList();
+      return userMapper.userToUserResponseEntity(user, paymentCardsResponse);
     } else {
       throw new NoDataException("User not found");
     }
@@ -118,7 +121,8 @@ public class UserServiceImpl implements UserService {
   @Override
   public Page<UserResponse> findAll(Pageable pageable) {
     Page<User> users = userRepository.findAll(pageable);
-    return users.map(userMapper::userToUserResponseEntity);
+
+    return getUserResponsesPageFromUsersPage(users);
   }
 
   @Override
@@ -129,6 +133,29 @@ public class UserServiceImpl implements UserService {
     Specification<User> nameAndSurnameSpecification = Specification.where(
             UserSpecification.filterByName(name).and(UserSpecification.filterBySurname(surname)));
     Page<User> users = userRepository.findAll(nameAndSurnameSpecification, pageable);
-    return users.map(userMapper::userToUserResponseEntity);
+    return getUserResponsesPageFromUsersPage(users);
+  }
+
+  private Page<UserResponse> getUserResponsesPageFromUsersPage(Page<User> users) {
+    List<Long> userIds = users.stream()
+            .map(User::getId)
+            .toList();
+
+    List<PaymentCard> paymentCards = paymentCardRepository.findAllByUserIdIn(userIds);
+    Map<Long, List<PaymentCardResponse>> paymentCardsByUserId =
+            paymentCards.stream().collect(Collectors.groupingBy(
+                    paymentCard -> paymentCard.getUser().getId(),
+                    Collectors.mapping(
+                            paymentCardMapper::paymentCardToResponse,
+                            Collectors.toList()
+                    )
+            ));
+
+    return users.map(user ->
+            userMapper.userToUserResponseEntity(
+                    user,
+                    paymentCardsByUserId.getOrDefault(user.getId(), List.of())
+            )
+    );
   }
 }

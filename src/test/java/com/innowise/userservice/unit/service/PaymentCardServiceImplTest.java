@@ -60,7 +60,7 @@ class PaymentCardServiceImplTest {
     when(paymentCardRepository.existsByNumber(CARD_NUMBER))
             .thenReturn(false);
 
-    when(paymentCardRepository.countByUserId(USER_ID))
+    when(paymentCardRepository.countByUserIdAndActiveIsTrue(USER_ID))
             .thenReturn(2L);
 
     when(paymentCardMapper.createPaymentCardRequestToEntity(request))
@@ -122,7 +122,7 @@ class PaymentCardServiceImplTest {
     when(paymentCardRepository.existsByNumber(CARD_NUMBER))
             .thenReturn(false);
 
-    when(paymentCardRepository.countByUserId(USER_ID))
+    when(paymentCardRepository.countByUserIdAndActiveIsTrue(USER_ID))
             .thenReturn(5L);
 
     assertThrows(ConflictException.class,

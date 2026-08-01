@@ -4,7 +4,6 @@ import com.innowise.userservice.dto.user.CreateUserRequest;
 import com.innowise.userservice.dto.user.FilterByNameAndSurnameRequest;
 import com.innowise.userservice.dto.user.UpdateUserRequest;
 import com.innowise.userservice.dto.user.UserResponse;
-import com.innowise.userservice.entity.PaymentCard;
 import com.innowise.userservice.entity.User;
 import com.innowise.userservice.exception.ConflictException;
 import com.innowise.userservice.exception.NoDataException;
@@ -56,7 +55,7 @@ public class UserServiceImplTest {
     when(userRepository.existsByEmail(EMAIL)).thenReturn(false);
     when(userMapper.createUserRequestToEntity(createUserRequest)).thenReturn(user);
     when(userRepository.save(user)).thenReturn(user);
-    when(userMapper.userToUserResponseEntity(user)).thenReturn(expectedResponse);
+    when(userMapper.userToUserResponseEntity(user, )).thenReturn(expectedResponse);
 
     UserResponse actualResponse = userService.create(createUserRequest);
 
@@ -86,7 +85,7 @@ public class UserServiceImplTest {
     when(userRepository.existsByEmail(UPDATE_EMAIL)).thenReturn(false);
     doNothing().when(userMapper).updateEntity(updateUserRequest, user);
     when(userRepository.save(user)).thenReturn(user);
-    when(userMapper.userToUserResponseEntity(user)).thenReturn(expectedResponse);
+    when(userMapper.userToUserResponseEntity(user, )).thenReturn(expectedResponse);
 
     UserResponse actualResponse = userService.update(ID, updateUserRequest);
 
@@ -102,7 +101,7 @@ public class UserServiceImplTest {
     when(userRepository.findById(ID)).thenReturn(Optional.of(user));
     doNothing().when(userMapper).updateEntity(updateUserRequest, user);
     when(userRepository.save(user)).thenReturn(user);
-    when(userMapper.userToUserResponseEntity(user)).thenReturn(expectedResponse);
+    when(userMapper.userToUserResponseEntity(user, )).thenReturn(expectedResponse);
 
     UserResponse actualResponse = userService.update(ID, updateUserRequest);
 
@@ -142,7 +141,7 @@ public class UserServiceImplTest {
     UserResponse expectedResponse = new UserResponse(ID, NAME, SURNAME, BIRTH_DATE, EMAIL, ACTIVE, CREATED_AT, UPDATED_AT);
 
     when(userRepository.findById(id)).thenReturn(Optional.of(user));
-    when(userMapper.userToUserResponseEntity(user)).thenReturn(expectedResponse);
+    when(userMapper.userToUserResponseEntity(user, )).thenReturn(expectedResponse);
 
     UserResponse actualResponse = userService.findById(id);
     assertEquals(expectedResponse, actualResponse);
@@ -228,7 +227,7 @@ public class UserServiceImplTest {
     Page<User> users = new PageImpl<>(List.of(user));
 
     when(userRepository.findAll(pageable)).thenReturn(users);
-    when(userMapper.userToUserResponseEntity(user)).thenReturn(response);
+    when(userMapper.userToUserResponseEntity(user, )).thenReturn(response);
 
     Page<UserResponse> result = userService.findAll(pageable);
 
@@ -263,7 +262,7 @@ public class UserServiceImplTest {
     when(userRepository.findAll(any(Specification.class), eq(pageable)))
             .thenReturn(users);
 
-    when(userMapper.userToUserResponseEntity(user))
+    when(userMapper.userToUserResponseEntity(user, ))
             .thenReturn(response);
 
     Page<UserResponse> result =

@@ -13,9 +13,11 @@ public interface PaymentCardMapper {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "user.id", source = "userId")
+  @Mapping(target = "number", ignore = true)
   PaymentCard createPaymentCardRequestToEntity(CreatePaymentCardRequest createPaymentCardRequest);
 
   @Mapping(target = "userId", source = "user.id")
+  @Mapping(target = "number", ignore = true)
   PaymentCardResponse paymentCardToResponse(PaymentCard paymentCard);
 
   @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
@@ -24,5 +26,6 @@ public interface PaymentCardMapper {
   @Mapping(target = "active", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "number", ignore = true)
   void updatePaymentCard(UpdatePaymentCardRequest updatePaymentCardRequest, @MappingTarget PaymentCard paymentCard);
 }
