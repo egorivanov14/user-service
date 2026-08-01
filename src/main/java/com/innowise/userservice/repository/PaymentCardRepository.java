@@ -24,7 +24,7 @@ public interface PaymentCardRepository extends JpaRepository<PaymentCard, Long>,
   @Query(value = "UPDATE payment_cards SET active = false, updated_at = NOW() WHERE id = :id", nativeQuery = true)
   int deactivate(@Param("id") Long id);
 
-  Long countByUserId(Long user_id);
+  Long countByUserId(Long userId);
 
   boolean existsByNumber(String number);
 

@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,12 +43,14 @@ public class PaymentCardController {
     return ResponseEntity.ok(paymentCardResponse);
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping("/activate/{id}")
   public ResponseEntity<Void> activate(@PathVariable Long id) {
     paymentCardService.activate(id);
     return ResponseEntity.ok().build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping("/deactivate/{id}")
   public ResponseEntity<Void> deactivate(@PathVariable Long id) {
     paymentCardService.deactivate(id);
