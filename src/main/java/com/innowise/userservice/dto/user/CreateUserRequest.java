@@ -7,11 +7,11 @@ import java.time.LocalDate;
 
 public record CreateUserRequest(
         @NotBlank
-        @Size(min = 1, max = 100, message = "invalid length of parameter")
+        @Size(min = 1, max = 100, message = "Invalid length of parameter")
         String name,
 
         @NotBlank
-        @Size(min = 1, max = 100, message = "invalid length of parameter")
+        @Size(min = 1, max = 100, message = "Invalid length of parameter")
         String surname,
 
         @NotNull
@@ -20,7 +20,7 @@ public record CreateUserRequest(
         LocalDate birthDate,
 
         @NotBlank
-        @Email(message = "invalid format of email")
+        @Email(message = "Invalid format of email")
         String email
 ) {
 }

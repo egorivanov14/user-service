@@ -23,4 +23,9 @@ public class GlobalExceptionHandler {
   public ResponseEntity<String> handleException(DataIntegrityViolationException exception) {
     return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
   }
+
+  @ExceptionHandler(AuthenticationException.class)
+  public ResponseEntity<String> handleException(AuthenticationException exception) {
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(exception.getMessage());
+  }
 }

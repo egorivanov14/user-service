@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -30,6 +31,7 @@ public class UserController {
     return ResponseEntity.ok(userResponse);
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @GetMapping("/get/{id}")
   public ResponseEntity<UserResponse> get(@PathVariable Long id) {
     UserResponse response = userService.findById(id);
@@ -42,23 +44,27 @@ public class UserController {
     return ResponseEntity.ok().build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping("/activate/{id}")
   public ResponseEntity<Void> activate(@PathVariable Long id) {
     userService.activate(id);
     return ResponseEntity.ok().build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping("/deactivate/{id}")
   public ResponseEntity<Void> deactivate(@PathVariable Long id) {
     userService.deactivate(id);
     return ResponseEntity.ok().build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @GetMapping()
   public Page<UserResponse> getAll(Pageable pageable) {
     return userService.findAll(pageable);
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping("/filter")
   public Page<UserResponse> getFiltered(@Valid @RequestBody FilterByNameAndSurnameRequest filterByNameAndSurnameRequest, Pageable pageable) {
     return userService.findAllAndFilterByNameAndSurname(pageable, filterByNameAndSurnameRequest);
