@@ -8,12 +8,12 @@ import static com.innowise.userservice.config.ConstantConfiguration.SURNAME_CONS
 
 public class UserSpecification {
   public static Specification<User> filterByName(String name) {
-    return ((root, query, criteriaBuilder) ->
-            name == null ? null : criteriaBuilder.equal(root.get(NAME_CONST), name));
+    return (root, query, criteriaBuilder) ->
+            name == null ? null : criteriaBuilder.equal(root.get(NAME_CONST), name);
   }
 
   public static Specification<User> filterBySurname(String surname) {
-    return ((root, query, criteriaBuilder) ->
-            surname == null ? null : criteriaBuilder.equal(root.get(SURNAME_CONST), surname));
+    return (root, query, criteriaBuilder) ->
+            surname == null ? null : criteriaBuilder.equal(root.get(SURNAME_CONST), surname);
   }
 }

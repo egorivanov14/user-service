@@ -14,7 +14,7 @@ import java.util.Optional;
 @Repository
 public interface PaymentCardRepository extends JpaRepository<PaymentCard, Long>, JpaSpecificationExecutor<PaymentCard> {
 
-  List<PaymentCard> findAllByUserId(@Param("user_id") Long userId);
+  List<PaymentCard> findAllByUserId(Long userId);
 
   @Modifying(clearAutomatically = true)
   @Query(value = "UPDATE payment_cards SET active = true, updated_at = NOW() WHERE id = :id", nativeQuery = true)

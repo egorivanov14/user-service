@@ -19,7 +19,6 @@ public interface UserMapper {
   @Mapping(target = "paymentCards", ignore = true)
   User createUserRequestToEntity(CreateUserRequest createUserRequest);
 
-  @Mapping(target = "paymentCards", ignore = true)
   @Mapping(target = "paymentCards", source = "paymentCards")
   UserResponse userToUserResponseEntity(User user, List<PaymentCardResponse> paymentCards);
 

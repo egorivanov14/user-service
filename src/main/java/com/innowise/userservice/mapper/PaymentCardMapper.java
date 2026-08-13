@@ -17,7 +17,6 @@ public interface PaymentCardMapper {
   PaymentCard createPaymentCardRequestToEntity(CreatePaymentCardRequest createPaymentCardRequest);
 
   @Mapping(target = "userId", source = "user.id")
-  @Mapping(target = "number", ignore = true)
   PaymentCardResponse paymentCardToResponse(PaymentCard paymentCard);
 
   @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

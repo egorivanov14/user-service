@@ -12,6 +12,7 @@ import com.innowise.userservice.mapper.PaymentCardMapper;
 import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
 import com.innowise.userservice.security.HashService;
+import com.innowise.userservice.service.CacheService;
 import com.innowise.userservice.service.PaymentCardService;
 import com.innowise.userservice.specification.PaymentCardSpecification;
 import org.springframework.cache.annotation.CacheEvict;
@@ -32,13 +33,15 @@ public class PaymentCardServiceImpl implements PaymentCardService {
   private final PaymentCardRepository paymentCardRepository;
   private final PaymentCardMapper paymentCardMapper;
   private final UserRepository userRepository;
-  private final HashService  hashService;
+  private final HashService hashService;
+  private final CacheService cacheService;
 
-  public PaymentCardServiceImpl(PaymentCardRepository paymentCardRepository, PaymentCardMapper paymentCardMapper, UserRepository userRepository,  HashService hashService) {
+  public PaymentCardServiceImpl(PaymentCardRepository paymentCardRepository, PaymentCardMapper paymentCardMapper, UserRepository userRepository, HashService hashService, CacheService cacheService) {
     this.paymentCardRepository = paymentCardRepository;
     this.paymentCardMapper = paymentCardMapper;
     this.userRepository = userRepository;
     this.hashService = hashService;
+    this.cacheService = cacheService;
   }
 
   @Override
@@ -77,7 +80,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     paymentCardMapper.updatePaymentCard(updatePaymentCardRequest, paymentCardEntity);
     PaymentCard updatedCard = paymentCardRepository.save(paymentCardEntity);
     Long userId = paymentCardEntity.getUser().getId();
-    evictUserCache(userId);
+     cacheService.evictUserCache(userId);
     return paymentCardMapper.paymentCardToResponse(updatedCard);
   }
 
@@ -99,8 +102,8 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     if (countChangedRows == 0) {
       throw new NoDataException("Payment card not found");
     }
-    Long userId = paymentCardRepository.getUserIdById(id).orElseThrow(()-> new NoDataException("Card not found"));
-    evictUserCache(userId);
+    Long userId = paymentCardRepository.getUserIdById(id).orElseThrow(() -> new NoDataException("Card not found"));
+    cacheService.evictUserCache(userId);
   }
 
   @Override
@@ -110,16 +113,16 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     if (countChangedRows == 0) {
       throw new NoDataException("Payment card not found");
     }
-    Long userId = paymentCardRepository.getUserIdById(id).orElseThrow(()-> new NoDataException("Card not found"));
-    evictUserCache(userId);
+    Long userId = paymentCardRepository.getUserIdById(id).orElseThrow(() -> new NoDataException("Card not found"));
+    cacheService.evictUserCache(userId);
   }
 
   @Override
   @Transactional
   public void delete(Long id) {
-    Long userId = paymentCardRepository.getUserIdById(id).orElseThrow(()-> new NoDataException("Card not found"));
+    Long userId = paymentCardRepository.getUserIdById(id).orElseThrow(() -> new NoDataException("Card not found"));
     paymentCardRepository.deleteById(id);
-    evictUserCache(userId);
+    cacheService.evictUserCache(userId);
   }
 
   @Override
@@ -137,9 +140,5 @@ public class PaymentCardServiceImpl implements PaymentCardService {
   public List<PaymentCardResponse> findAllByUserId(Long userId) {
     List<PaymentCard> paymentCards = paymentCardRepository.findAllByUserId(userId);
     return paymentCards.stream().map(paymentCardMapper::paymentCardToResponse).toList();
-  }
-
-  @CacheEvict(value = "users", key = "#userId")
-  public void evictUserCache(Long userId) {
   }
 }

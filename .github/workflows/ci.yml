@@ -10,7 +10,6 @@ on:
       - feat-*
 
 jobs:
-
   build-test-sonar:
     name: Build, Test and SonarCloud
     runs-on: ubuntu-latest

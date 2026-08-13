@@ -1,7 +1,11 @@
 package com.innowise.userservice;
 
+import com.innowise.userservice.dto.card.PaymentCardResponse;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TestConstantConfiguration {
   public static final String NAME = "Egor";
@@ -22,5 +26,6 @@ public class TestConstantConfiguration {
   public static final String CARD_NUMBER = "1234567891234567";
   public static final LocalDate EXPIRE_DATE = LocalDate.of(2026, 12, 31);
   public static final String HOLDER = "Egor Ivanov";
-  public static final String NEW_CARD_NUMBER = "1234567891234578";
+  public static final String NEW_HOLDER = "Kirill Ivanov";
+  public static List<PaymentCardResponse> EMPTY_CARDS_LIST =  new ArrayList<PaymentCardResponse>();
 }

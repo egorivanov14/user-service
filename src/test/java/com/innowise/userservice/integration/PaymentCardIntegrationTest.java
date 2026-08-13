@@ -93,7 +93,7 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
     PaymentCard paymentCard = paymentCardRepository.findByNumber(CARD_NUMBER).orElseThrow(()->new NoDataException("Payment card no found"));
     Long paymentCardId = paymentCard.getId();
 
-    UpdatePaymentCardRequest updatePaymentCardRequest = new UpdatePaymentCardRequest(NEW_CARD_NUMBER, null, null);
+    UpdatePaymentCardRequest updatePaymentCardRequest = new UpdatePaymentCardRequest(NEW_HOLDER, null);
     String jsonUpdatePaymentCardRequest = objectMapper.writeValueAsString(updatePaymentCardRequest);
 
     mockMvc.perform(put("/api/payment-cards/update/{id}", paymentCardId)
@@ -102,8 +102,8 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
             .andExpect(status().isOk());
 
     PaymentCard updatedPaymentCard = paymentCardRepository.findById(paymentCardId).orElseThrow(()->new NoDataException("Payment card no found"));
-    assertEquals(NEW_CARD_NUMBER, updatedPaymentCard.getNumber());
-    assertEquals(HOLDER, updatedPaymentCard.getHolder());
+    assertEquals(CARD_NUMBER, updatedPaymentCard.getNumber());
+    assertEquals(NEW_HOLDER, updatedPaymentCard.getHolder());
     assertEquals(EXPIRE_DATE, updatedPaymentCard.getExpirationDate());
   }
 

@@ -135,7 +135,7 @@ class PaymentCardServiceImplTest {
   void update_shouldUpdateCard() {
 
     UpdatePaymentCardRequest request =
-            new UpdatePaymentCardRequest(NEW_CARD_NUMBER, HOLDER, EXPIRE_DATE);
+            new UpdatePaymentCardRequest(NEW_HOLDER, EXPIRE_DATE);
 
     PaymentCard card = new PaymentCard();
 
@@ -144,9 +144,6 @@ class PaymentCardServiceImplTest {
 
     when(paymentCardRepository.findById(ID))
             .thenReturn(Optional.of(card));
-
-    when(paymentCardRepository.existsByNumber(NEW_CARD_NUMBER))
-            .thenReturn(false);
 
     doNothing().when(paymentCardMapper)
             .updatePaymentCard(request, card);
@@ -166,28 +163,12 @@ class PaymentCardServiceImplTest {
   void update_cardNotFound_shouldThrowNoDataException() {
 
     UpdatePaymentCardRequest request =
-            new UpdatePaymentCardRequest(NEW_CARD_NUMBER, HOLDER, EXPIRE_DATE);
+            new UpdatePaymentCardRequest( NEW_HOLDER, EXPIRE_DATE);
 
     when(paymentCardRepository.findById(ID))
             .thenReturn(Optional.empty());
 
     assertThrows(NoDataException.class,
-            () -> paymentCardService.update(ID, request));
-  }
-
-  @Test
-  void update_duplicateNumber_shouldThrowConflictException() {
-
-    UpdatePaymentCardRequest request =
-            new UpdatePaymentCardRequest(NEW_CARD_NUMBER, HOLDER, EXPIRE_DATE);
-
-    when(paymentCardRepository.findById(ID))
-            .thenReturn(Optional.of(new PaymentCard()));
-
-    when(paymentCardRepository.existsByNumber(NEW_CARD_NUMBER))
-            .thenReturn(true);
-
-    assertThrows(ConflictException.class,
             () -> paymentCardService.update(ID, request));
   }
 
