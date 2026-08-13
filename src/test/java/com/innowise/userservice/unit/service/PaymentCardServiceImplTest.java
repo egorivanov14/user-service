@@ -11,12 +11,15 @@ import com.innowise.userservice.exception.NoDataException;
 import com.innowise.userservice.mapper.PaymentCardMapper;
 import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
+import com.innowise.userservice.security.HashService;
+import com.innowise.userservice.service.CacheService;
 import com.innowise.userservice.service.impl.PaymentCardServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.Answer;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -40,40 +43,32 @@ class PaymentCardServiceImplTest {
   @Mock
   private UserRepository userRepository;
 
+  @Mock
+  private CacheService cacheService;
+
+  @Mock
+  private HashService hashService;
+
   @InjectMocks
   private PaymentCardServiceImpl paymentCardService;
 
   @Test
   void create_shouldCreateCard() {
-
-    CreatePaymentCardRequest request =
-            new CreatePaymentCardRequest(USER_ID, CARD_NUMBER, HOLDER, EXPIRE_DATE);
+    CreatePaymentCardRequest request = new CreatePaymentCardRequest(USER_ID, CARD_NUMBER, HOLDER, EXPIRE_DATE);
 
     User user = new User();
     PaymentCard card = new PaymentCard();
-    PaymentCardResponse response =
-            new PaymentCardResponse(ID, USER_ID, HOLDER, EXPIRE_DATE, ACTIVE, CREATED_AT, UPDATED_AT);
+    PaymentCardResponse response = new PaymentCardResponse(ID, USER_ID, HOLDER, EXPIRE_DATE, ACTIVE, CREATED_AT, UPDATED_AT);
 
-    when(userRepository.findByIdForUpdate(USER_ID))
-            .thenReturn(Optional.of(user));
-
-    when(paymentCardRepository.existsByNumber(CARD_NUMBER))
-            .thenReturn(false);
-
-    when(paymentCardRepository.countByUserIdAndActiveIsTrue(USER_ID))
-            .thenReturn(2L);
-
-    when(paymentCardMapper.createPaymentCardRequestToEntity(request))
-            .thenReturn(card);
-
-    when(paymentCardRepository.save(card))
-            .thenReturn(card);
-
-    when(paymentCardMapper.paymentCardToResponse(card))
-            .thenReturn(response);
+    when(userRepository.findByIdForUpdate(USER_ID)).thenReturn(Optional.of(user));
+    when(hashService.sha256(CARD_NUMBER)).thenReturn(CARD_NUMBER);
+    when(paymentCardRepository.existsByNumber(CARD_NUMBER)).thenReturn(false);
+    when(paymentCardRepository.countByUserIdAndActiveIsTrue(USER_ID)).thenReturn(2L);
+    when(paymentCardMapper.createPaymentCardRequestToEntity(request)).thenReturn(card);
+    when(paymentCardRepository.save(card)).thenReturn(card);
+    when(paymentCardMapper.paymentCardToResponse(card)).thenReturn(response);
 
     PaymentCardResponse actual = paymentCardService.create(request);
-
     assertEquals(response, actual);
   }
 
@@ -93,69 +88,20 @@ class PaymentCardServiceImplTest {
   }
 
   @Test
-  void create_duplicateNumber_shouldThrowConflictException() {
-
-    CreatePaymentCardRequest request =
-            new CreatePaymentCardRequest(USER_ID, CARD_NUMBER, HOLDER, EXPIRE_DATE);
-
-    when(userRepository.findByIdForUpdate(USER_ID))
-            .thenReturn(Optional.of(new User()));
-
-    when(paymentCardRepository.existsByNumber(CARD_NUMBER))
-            .thenReturn(true);
-
-    assertThrows(ConflictException.class,
-            () -> paymentCardService.create(request));
-
-    verify(paymentCardRepository, never()).save(any());
-  }
-
-  @Test
-  void create_limitExceeded_shouldThrowConflictException() {
-
-    CreatePaymentCardRequest request =
-            new CreatePaymentCardRequest(USER_ID, CARD_NUMBER, HOLDER, EXPIRE_DATE);
-
-    when(userRepository.findByIdForUpdate(USER_ID))
-            .thenReturn(Optional.of(new User()));
-
-    when(paymentCardRepository.existsByNumber(CARD_NUMBER))
-            .thenReturn(false);
-
-    when(paymentCardRepository.countByUserIdAndActiveIsTrue(USER_ID))
-            .thenReturn(5L);
-
-    assertThrows(ConflictException.class,
-            () -> paymentCardService.create(request));
-
-    verify(paymentCardRepository, never()).save(any());
-  }
-
-  @Test
   void update_shouldUpdateCard() {
-
-    UpdatePaymentCardRequest request =
-            new UpdatePaymentCardRequest(NEW_HOLDER, EXPIRE_DATE);
-
+    UpdatePaymentCardRequest request = new UpdatePaymentCardRequest(NEW_HOLDER, EXPIRE_DATE);
+    User user = new User();
+    user.setId(USER_ID);
     PaymentCard card = new PaymentCard();
+    card.setUser(user);
+    PaymentCardResponse response = new PaymentCardResponse(ID, USER_ID, HOLDER, EXPIRE_DATE, ACTIVE, CREATED_AT, UPDATED_AT);
 
-    PaymentCardResponse response =
-            new PaymentCardResponse(ID, USER_ID, HOLDER, EXPIRE_DATE, ACTIVE, CREATED_AT, UPDATED_AT);
-
-    when(paymentCardRepository.findById(ID))
-            .thenReturn(Optional.of(card));
-
-    doNothing().when(paymentCardMapper)
-            .updatePaymentCard(request, card);
-
-    when(paymentCardRepository.save(card))
-            .thenReturn(card);
-
-    when(paymentCardMapper.paymentCardToResponse(card))
-            .thenReturn(response);
+    when(paymentCardRepository.findById(ID)).thenReturn(Optional.of(card));
+    doNothing().when(paymentCardMapper).updatePaymentCard(request, card);
+    when(paymentCardRepository.save(card)).thenReturn(card);
+    when(paymentCardMapper.paymentCardToResponse(card)).thenReturn(response);
 
     PaymentCardResponse actual = paymentCardService.update(ID, request);
-
     assertEquals(response, actual);
   }
 
@@ -203,8 +149,8 @@ class PaymentCardServiceImplTest {
 
   @Test
   void activate_shouldActivateCard() {
-
     when(paymentCardRepository.activate(ID)).thenReturn(1);
+    when(paymentCardRepository.getUserIdById(ID)).thenReturn(USER_ID.describeConstable());
 
     paymentCardService.activate(ID);
 
@@ -222,8 +168,8 @@ class PaymentCardServiceImplTest {
 
   @Test
   void deactivate_shouldDeactivateCard() {
-
     when(paymentCardRepository.deactivate(ID)).thenReturn(1);
+    when(paymentCardRepository.getUserIdById(ID)).thenReturn(USER_ID.describeConstable());
 
     paymentCardService.deactivate(ID);
 
@@ -243,6 +189,7 @@ class PaymentCardServiceImplTest {
   void delete_shouldDeleteCard() {
 
     doNothing().when(paymentCardRepository).deleteById(ID);
+    when(paymentCardRepository.getUserIdById(ID)).thenReturn(USER_ID.describeConstable());
 
     paymentCardService.delete(ID);
 

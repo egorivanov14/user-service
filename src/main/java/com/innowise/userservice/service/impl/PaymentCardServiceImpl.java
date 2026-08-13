@@ -15,7 +15,6 @@ import com.innowise.userservice.security.HashService;
 import com.innowise.userservice.service.CacheService;
 import com.innowise.userservice.service.PaymentCardService;
 import com.innowise.userservice.specification.PaymentCardSpecification;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -79,8 +78,9 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     PaymentCard paymentCardEntity = paymentCard.get();
     paymentCardMapper.updatePaymentCard(updatePaymentCardRequest, paymentCardEntity);
     PaymentCard updatedCard = paymentCardRepository.save(paymentCardEntity);
-    Long userId = paymentCardEntity.getUser().getId();
-     cacheService.evictUserCache(userId);
+    User user = paymentCardEntity.getUser();
+    Long userId = user.getId();
+    cacheService.evictUserCache(userId);
     return paymentCardMapper.paymentCardToResponse(updatedCard);
   }
 
