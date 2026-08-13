@@ -164,7 +164,8 @@ public class UserIntegrationTest extends AbstractIntegrationTest {
 
     mockMvc.perform(
                     get("/api/users/get/{id}", userId)
-                            .contentType(MediaType.APPLICATION_JSON)).andExpect(jsonPath("$.id").value(userId))
+                            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.id").value(userId))
             .andExpect(jsonPath("$.name").value(user.getName()))
             .andExpect(jsonPath("$.surname").value(user.getSurname()))
             .andExpect(jsonPath("$.birthDate").value(user.getBirthDate().toString()))

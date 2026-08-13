@@ -53,13 +53,13 @@ public class PaymentCardServiceImpl implements PaymentCardService {
       throw new NoDataException("User not found");
     }
     String number = createPaymentCardRequest.number();
-    if (paymentCardRepository.existsByNumber(number)) {
+    String hashedNumber = hashService.sha256(number);
+    if (paymentCardRepository.existsByNumber(hashedNumber)) {
       throw new ConflictException("Number already in use");
     }
     Long cardCount = paymentCardRepository.countByUserIdAndActiveIsTrue(userId);
     if (cardCount < MAX_CARDS_PER_USER_CONST) {
       PaymentCard paymentCard = paymentCardMapper.createPaymentCardRequestToEntity(createPaymentCardRequest);
-      String hashedNumber = hashService.sha256(number);
       paymentCard.setNumber(hashedNumber);
       PaymentCard savedCard = paymentCardRepository.save(paymentCard);
       return paymentCardMapper.paymentCardToResponse(savedCard);
