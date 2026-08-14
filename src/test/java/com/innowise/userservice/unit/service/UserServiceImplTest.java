@@ -1,5 +1,6 @@
 package com.innowise.userservice.unit.service;
 
+import com.innowise.userservice.client.GrpcClientService;
 import com.innowise.userservice.dto.user.CreateUserRequest;
 import com.innowise.userservice.dto.user.FilterByNameAndSurnameRequest;
 import com.innowise.userservice.dto.user.UpdateUserRequest;
@@ -46,6 +47,8 @@ public class UserServiceImplTest {
   private PaymentCardRepository paymentCardRepository;
   @Mock
   private PaymentCardMapper paymentCardMapper;
+  @Mock
+  private GrpcClientService grpcClientService;
 
   @InjectMocks
   private UserServiceImpl userService;
@@ -164,6 +167,7 @@ public class UserServiceImplTest {
   @Test
   void delete_shouldDeleteUser() {
     doNothing().when(userRepository).deleteById(ID);
+    doNothing().when(grpcClientService).deleteUserCredentials(ID);
 
     userService.delete(ID);
     verify(userRepository).deleteById(ID);

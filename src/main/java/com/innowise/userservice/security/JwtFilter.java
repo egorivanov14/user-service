@@ -5,6 +5,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +20,7 @@ import static com.innowise.userservice.config.ConstantConfiguration.ROLE_CONST;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
+  private static final Logger logger = LoggerFactory.getLogger(JwtFilter.class);
   private final JwtService jwtService;
 
   public JwtFilter(JwtService jwtService) {
@@ -26,6 +29,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    logger.debug("Jwt filter called: method = {}, uri = {}", request.getMethod(), request.getRequestURI());
     String header = request.getHeader("Authorization");
 
     if (header != null && header.startsWith("Bearer ")) {
@@ -41,6 +45,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userId, null, authorities);
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        logger.info("Request authenticated: userId = {}, role = {}", userId, role);
       }
     }
     filterChain.doFilter(request, response);
