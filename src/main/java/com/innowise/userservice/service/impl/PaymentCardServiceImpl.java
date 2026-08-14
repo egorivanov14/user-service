@@ -15,6 +15,8 @@ import com.innowise.userservice.security.HashService;
 import com.innowise.userservice.service.CacheService;
 import com.innowise.userservice.service.PaymentCardService;
 import com.innowise.userservice.specification.PaymentCardSpecification;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -28,6 +30,7 @@ import static com.innowise.userservice.config.ConstantConfiguration.MAX_CARDS_PE
 
 @Service
 public class PaymentCardServiceImpl implements PaymentCardService {
+  private static final Logger logger = LoggerFactory.getLogger(PaymentCardServiceImpl.class);
 
   private final PaymentCardRepository paymentCardRepository;
   private final PaymentCardMapper paymentCardMapper;
@@ -46,14 +49,17 @@ public class PaymentCardServiceImpl implements PaymentCardService {
   @Override
   @Transactional
   public PaymentCardResponse create(CreatePaymentCardRequest createPaymentCardRequest) {
+    logger.debug("create() called: userId = {}", createPaymentCardRequest.userId());
     Long userId = createPaymentCardRequest.userId();
     Optional<User> user = userRepository.findByIdForUpdate(userId);
     if (user.isEmpty()) {
+      logger.error("Failed to create PaymentCard. User not found by id: {}.", userId);
       throw new NoDataException("User not found");
     }
     String number = createPaymentCardRequest.number();
     String hashedNumber = hashService.sha256(number);
     if (paymentCardRepository.existsByNumber(hashedNumber)) {
+      logger.error("PaymentCard already exists for number: {}.", number);
       throw new ConflictException("Number already in use");
     }
     Long cardCount = paymentCardRepository.countByUserIdAndActiveIsTrue(userId);
@@ -63,6 +69,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
       PaymentCard savedCard = paymentCardRepository.save(paymentCard);
       return paymentCardMapper.paymentCardToResponse(savedCard);
     } else {
+      logger.error("Failed to create PaymentCard, limit had bean reached");
       throw new ConflictException("User can have maximum 5 cards");
     }
   }
@@ -70,8 +77,10 @@ public class PaymentCardServiceImpl implements PaymentCardService {
   @Override
   @Transactional
   public PaymentCardResponse update(Long id, UpdatePaymentCardRequest updatePaymentCardRequest) {
+    logger.debug("update() called: cardId = {}", id);
     Optional<PaymentCard> paymentCard = paymentCardRepository.findById(id);
     if (paymentCard.isEmpty()) {
+      logger.error("Failed to update PaymentCard. PaymentCard not found by id: {}.", id);
       throw new NoDataException("Payment card not found");
     }
 
@@ -86,11 +95,13 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
   @Override
   public PaymentCardResponse findById(Long id) {
+    logger.debug("findById() called: cardId = {}", id);
     Optional<PaymentCard> paymentCard = paymentCardRepository.findById(id);
     if (paymentCard.isPresent()) {
       PaymentCard paymentCardEntity = paymentCard.get();
       return paymentCardMapper.paymentCardToResponse(paymentCardEntity);
     } else {
+      logger.error("Failed to find PaymentCard. PaymentCard not found by id: {}.", id);
       throw new NoDataException("Payment card not found");
     }
   }
@@ -98,8 +109,10 @@ public class PaymentCardServiceImpl implements PaymentCardService {
   @Override
   @Transactional
   public void activate(Long id) {
+    logger.debug("activate() called: cardId = {}", id);
     int countChangedRows = paymentCardRepository.activate(id);
     if (countChangedRows == 0) {
+      logger.error("Failed to activate PaymentCard. Payment card not found by id: {}.", id);
       throw new NoDataException("Payment card not found");
     }
     Long userId = paymentCardRepository.getUserIdById(id).orElseThrow(() -> new NoDataException("Card not found"));
@@ -109,8 +122,10 @@ public class PaymentCardServiceImpl implements PaymentCardService {
   @Override
   @Transactional
   public void deactivate(Long id) {
+    logger.debug("deactivate() called: cardId = {}", id);
     int countChangedRows = paymentCardRepository.deactivate(id);
     if (countChangedRows == 0) {
+      logger.error("Failed to deactivate PaymentCard. Payment card not found by id: {}.", id);
       throw new NoDataException("Payment card not found");
     }
     Long userId = paymentCardRepository.getUserIdById(id).orElseThrow(() -> new NoDataException("Card not found"));
@@ -120,6 +135,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
   @Override
   @Transactional
   public void delete(Long id) {
+    logger.debug("delete() called:  cardId = {}", id);
     Long userId = paymentCardRepository.getUserIdById(id).orElseThrow(() -> new NoDataException("Card not found"));
     paymentCardRepository.deleteById(id);
     cacheService.evictUserCache(userId);
@@ -127,6 +143,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
   @Override
   public Page<PaymentCardResponse> findAllByOwnerNameAndSurname(FilterByOwnerNameAndSurnameRequest filterByOwnerNameAndSurnameRequest, Pageable pageable) {
+    logger.debug("findAllByOwnerNameAndSurname() called");
     String name = filterByOwnerNameAndSurnameRequest.name();
     String surname = filterByOwnerNameAndSurnameRequest.surname();
     Specification<PaymentCard> specification = Specification.where(
@@ -138,6 +155,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
   @Override
   public List<PaymentCardResponse> findAllByUserId(Long userId) {
+    logger.debug("findAllByUserId() called: userId = {}", userId);
     List<PaymentCard> paymentCards = paymentCardRepository.findAllByUserId(userId);
     return paymentCards.stream().map(paymentCardMapper::paymentCardToResponse).toList();
   }

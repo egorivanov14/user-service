@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package com.innowise.authentication_service;
+
+import "google/protobuf/empty.proto";
+
+option java_package = "com.innowise.authentication_service.grpc";
+option java_outer_classname = "AuthenticationServiceProto";
+
+service AuthenticationService {
+  rpc DeleteUserCredentials (DeleteUserCredentialsRequest) returns (google.protobuf.Empty);
+}
+
+message DeleteUserCredentialsRequest {
+  int64 userId = 1;
+}

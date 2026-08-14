@@ -19,7 +19,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleException(NoDataException exception) {
     int code = HttpStatus.NOT_FOUND.value();
     String message = exception.getMessage();
-    LocalDateTime  now = LocalDateTime.now();
+    LocalDateTime now = LocalDateTime.now();
     ErrorResponse errorResponse = new ErrorResponse(code, message, now);
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
   }
@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleException(ConflictException exception) {
     int code = HttpStatus.CONFLICT.value();
     String message = exception.getMessage();
-    LocalDateTime  now = LocalDateTime.now();
+    LocalDateTime now = LocalDateTime.now();
     ErrorResponse errorResponse = new ErrorResponse(code, message, now);
     return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
   }
@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleException(DataIntegrityViolationException exception) {
     int code = HttpStatus.CONFLICT.value();
     String message = exception.getMessage();
-    LocalDateTime  now = LocalDateTime.now();
+    LocalDateTime now = LocalDateTime.now();
     ErrorResponse errorResponse = new ErrorResponse(code, message, now);
     return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
   }
@@ -46,7 +46,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleException(AuthenticationException exception) {
     int code = HttpStatus.UNAUTHORIZED.value();
     String message = exception.getMessage();
-    LocalDateTime  now = LocalDateTime.now();
+    LocalDateTime now = LocalDateTime.now();
     ErrorResponse errorResponse = new ErrorResponse(code, message, now);
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
   }
@@ -55,7 +55,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleException(MethodArgumentNotValidException exception) {
     int code = HttpStatus.BAD_REQUEST.value();
     String message = exception.getMessage();
-    LocalDateTime  now = LocalDateTime.now();
+    LocalDateTime now = LocalDateTime.now();
     ErrorResponse errorResponse = new ErrorResponse(code, message, now);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
   }
@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleException(MethodArgumentTypeMismatchException exception) {
     int code = HttpStatus.BAD_REQUEST.value();
     String message = exception.getMessage();
-    LocalDateTime  now = LocalDateTime.now();
+    LocalDateTime now = LocalDateTime.now();
     ErrorResponse errorResponse = new ErrorResponse(code, message, now);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
   }
@@ -73,7 +73,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleException(HttpMessageNotReadableException exception) {
     int code = HttpStatus.BAD_REQUEST.value();
     String message = exception.getMessage();
-    LocalDateTime  now = LocalDateTime.now();
+    LocalDateTime now = LocalDateTime.now();
     ErrorResponse errorResponse = new ErrorResponse(code, message, now);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
   }
@@ -82,7 +82,16 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleException(Exception exception) {
     int code = HttpStatus.INTERNAL_SERVER_ERROR.value();
     String message = exception.getMessage();
-    LocalDateTime  now = LocalDateTime.now();
+    LocalDateTime now = LocalDateTime.now();
+    ErrorResponse errorResponse = new ErrorResponse(code, message, now);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+  }
+
+  @ExceptionHandler(AuthenticationServiceException.class)
+  public ResponseEntity<ErrorResponse> handleAuthenticationServiceException(AuthenticationServiceException exception) {
+    int code = HttpStatus.INTERNAL_SERVER_ERROR.value();
+    String message = exception.getMessage();
+    LocalDateTime now = LocalDateTime.now();
     ErrorResponse errorResponse = new ErrorResponse(code, message, now);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
   }

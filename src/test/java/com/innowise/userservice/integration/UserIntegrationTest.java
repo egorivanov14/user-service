@@ -1,5 +1,6 @@
 package com.innowise.userservice.integration;
 
+import com.innowise.userservice.client.GrpcClientService;
 import com.innowise.userservice.dto.user.CreateUserRequest;
 import com.innowise.userservice.dto.user.FilterByNameAndSurnameRequest;
 import com.innowise.userservice.dto.user.UpdateUserRequest;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -36,6 +38,9 @@ public class UserIntegrationTest extends AbstractIntegrationTest {
   private MockMvc mockMvc;
   @Autowired
   private ObjectMapper objectMapper;
+
+  @MockitoBean
+  private GrpcClientService grpcClientService;
 
   @BeforeEach
   void setUp() {

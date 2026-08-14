@@ -12,7 +12,7 @@ spring:
 
   data:
     redis:
-      port: ${REDIS_PORT}
+      port: 6379
       timeout: 2000ms
 
   liquibase:
@@ -24,5 +24,19 @@ spring:
     hibernate:
       ddl-auto: validate
 
+grpc:
+  server:
+    port: 9090
+    security:
+      enabled: false
+
 jwt:
   secret: ${JWT_SECRET_KEY}
+
+service:
+  secret: ${SERVER_SECRET_KEY}
+
+logging:
+  level:
+    root: INFO
+    com.innowise.userservice: DEBUG
