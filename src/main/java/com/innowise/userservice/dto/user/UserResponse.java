@@ -1,7 +1,10 @@
 package com.innowise.userservice.dto.user;
 
+import com.innowise.userservice.dto.card.PaymentCardResponse;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record UserResponse(
         Long id,
@@ -11,6 +14,7 @@ public record UserResponse(
         String email,
         Boolean active,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        List<PaymentCardResponse> paymentCards
 ) {
 }

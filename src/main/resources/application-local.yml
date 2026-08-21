@@ -1,7 +1,13 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:${POSTGRES_PORT}/${POSTGRES_DB}
+    url: jdbc:postgresql://localhost:${USERSERVICE_POSTGRES_PORT}/${USERSERVICE_POSTGRES_DB}
 
   data:
     redis:
       host: localhost
+
+grpc:
+  client:
+    userClientService:
+      address: localhost:${GRPC_AUTHSERVICE_PORT}
+      negotiation-type: PLAINTEXT

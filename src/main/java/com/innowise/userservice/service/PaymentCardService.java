@@ -23,8 +23,6 @@ public interface PaymentCardService {
 
   void delete(Long id);
 
-  void evictCache(Long id);
-
   List<PaymentCardResponse> findAllByUserId(Long userId);
 
   Page<PaymentCardResponse> findAllByOwnerNameAndSurname(FilterByOwnerNameAndSurnameRequest filterByOwnerNameAndSurnameRequest, Pageable pageable);

@@ -1,13 +1,14 @@
 package com.innowise.userservice.unit.service;
 
+import com.innowise.userservice.client.GrpcClientService;
 import com.innowise.userservice.dto.user.CreateUserRequest;
 import com.innowise.userservice.dto.user.FilterByNameAndSurnameRequest;
 import com.innowise.userservice.dto.user.UpdateUserRequest;
 import com.innowise.userservice.dto.user.UserResponse;
-import com.innowise.userservice.entity.PaymentCard;
 import com.innowise.userservice.entity.User;
 import com.innowise.userservice.exception.ConflictException;
 import com.innowise.userservice.exception.NoDataException;
+import com.innowise.userservice.mapper.PaymentCardMapper;
 import com.innowise.userservice.mapper.UserMapper;
 import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
@@ -28,7 +29,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.innowise.userservice.TestConstantConfiguration.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -43,6 +45,10 @@ public class UserServiceImplTest {
   private PaymentCardService paymentCardService;
   @Mock
   private PaymentCardRepository paymentCardRepository;
+  @Mock
+  private PaymentCardMapper paymentCardMapper;
+  @Mock
+  private GrpcClientService grpcClientService;
 
   @InjectMocks
   private UserServiceImpl userService;
@@ -51,12 +57,12 @@ public class UserServiceImplTest {
   void create_correctRequest_shouldCreateUser() {
     CreateUserRequest createUserRequest = new CreateUserRequest(NAME, SURNAME, BIRTH_DATE, EMAIL);
     User user = new User();
-    UserResponse expectedResponse = new UserResponse(ID, NAME, SURNAME, BIRTH_DATE, EMAIL, ACTIVE, CREATED_AT, UPDATED_AT);
+    UserResponse expectedResponse = new UserResponse(ID, NAME, SURNAME, BIRTH_DATE, EMAIL, ACTIVE, CREATED_AT, UPDATED_AT, EMPTY_CARD_RESPONSES_LIST);
 
     when(userRepository.existsByEmail(EMAIL)).thenReturn(false);
     when(userMapper.createUserRequestToEntity(createUserRequest)).thenReturn(user);
     when(userRepository.save(user)).thenReturn(user);
-    when(userMapper.userToUserResponseEntity(user)).thenReturn(expectedResponse);
+    when(userMapper.userToUserResponseEntity(user, EMPTY_CARD_RESPONSES_LIST)).thenReturn(expectedResponse);
 
     UserResponse actualResponse = userService.create(createUserRequest);
 
@@ -80,13 +86,13 @@ public class UserServiceImplTest {
   void update_shouldUpdateEmail() {
     UpdateUserRequest updateUserRequest = new UpdateUserRequest(null, null, null, UPDATE_EMAIL);
     User user = new User();
-    UserResponse expectedResponse = new UserResponse(ID, NAME, SURNAME, BIRTH_DATE, UPDATE_EMAIL, ACTIVE, CREATED_AT, UPDATED_AT);
+    UserResponse expectedResponse = new UserResponse(ID, NAME, SURNAME, BIRTH_DATE, UPDATE_EMAIL, ACTIVE, CREATED_AT, UPDATED_AT, EMPTY_CARD_RESPONSES_LIST);
 
     when(userRepository.findById(ID)).thenReturn(Optional.of(user));
     when(userRepository.existsByEmail(UPDATE_EMAIL)).thenReturn(false);
     doNothing().when(userMapper).updateEntity(updateUserRequest, user);
     when(userRepository.save(user)).thenReturn(user);
-    when(userMapper.userToUserResponseEntity(user)).thenReturn(expectedResponse);
+    when(userMapper.userToUserResponseEntity(user, EMPTY_CARD_RESPONSES_LIST)).thenReturn(expectedResponse);
 
     UserResponse actualResponse = userService.update(ID, updateUserRequest);
 
@@ -97,12 +103,12 @@ public class UserServiceImplTest {
   void update_shouldUpdateName() {
     UpdateUserRequest updateUserRequest = new UpdateUserRequest(UPDATE_NAME, null, null, null);
     User user = new User();
-    UserResponse expectedResponse = new UserResponse(ID, UPDATE_NAME, SURNAME, BIRTH_DATE, EMAIL, ACTIVE, CREATED_AT, UPDATED_AT);
+    UserResponse expectedResponse = new UserResponse(ID, UPDATE_NAME, SURNAME, BIRTH_DATE, EMAIL, ACTIVE, CREATED_AT, UPDATED_AT, EMPTY_CARD_RESPONSES_LIST);
 
     when(userRepository.findById(ID)).thenReturn(Optional.of(user));
     doNothing().when(userMapper).updateEntity(updateUserRequest, user);
     when(userRepository.save(user)).thenReturn(user);
-    when(userMapper.userToUserResponseEntity(user)).thenReturn(expectedResponse);
+    when(userMapper.userToUserResponseEntity(user, EMPTY_CARD_RESPONSES_LIST)).thenReturn(expectedResponse);
 
     UserResponse actualResponse = userService.update(ID, updateUserRequest);
 
@@ -137,14 +143,14 @@ public class UserServiceImplTest {
 
   @Test
   void findById_shouldFindUser() {
-    Long id = ID;
     User user = new User();
-    UserResponse expectedResponse = new UserResponse(ID, NAME, SURNAME, BIRTH_DATE, EMAIL, ACTIVE, CREATED_AT, UPDATED_AT);
+    UserResponse expectedResponse = new UserResponse(ID, NAME, SURNAME, BIRTH_DATE, EMAIL, ACTIVE, CREATED_AT, UPDATED_AT, EMPTY_CARD_RESPONSES_LIST);
 
-    when(userRepository.findById(id)).thenReturn(Optional.of(user));
-    when(userMapper.userToUserResponseEntity(user)).thenReturn(expectedResponse);
+    when(userRepository.findById(ID)).thenReturn(Optional.of(user));
+    when(paymentCardRepository.findAllByUserId(ID)).thenReturn(EMPTY_PAYMENT_CARD_LIST);
+    when(userMapper.userToUserResponseEntity(user, EMPTY_CARD_RESPONSES_LIST)).thenReturn(expectedResponse);
 
-    UserResponse actualResponse = userService.findById(id);
+    UserResponse actualResponse = userService.findById(ID);
     assertEquals(expectedResponse, actualResponse);
   }
 
@@ -160,13 +166,11 @@ public class UserServiceImplTest {
 
   @Test
   void delete_shouldDeleteUser() {
-    Long id = ID;
+    doNothing().when(userRepository).deleteById(ID);
+    doNothing().when(grpcClientService).deleteUserCredentials(ID);
 
-    when(paymentCardRepository.findAllByUserId(id)).thenReturn(List.of());
-    doNothing().when(userRepository).deleteById(id);
-
-    userService.delete(id);
-    verify(userRepository).deleteById(id);
+    userService.delete(ID);
+    verify(userRepository).deleteById(ID);
   }
 
   @Test
@@ -222,13 +226,14 @@ public class UserServiceImplTest {
             EMAIL,
             ACTIVE,
             CREATED_AT,
-            UPDATED_AT
+            UPDATED_AT,
+            EMPTY_CARD_RESPONSES_LIST
     );
 
     Page<User> users = new PageImpl<>(List.of(user));
 
     when(userRepository.findAll(pageable)).thenReturn(users);
-    when(userMapper.userToUserResponseEntity(user)).thenReturn(response);
+    when(userMapper.userToUserResponseEntity(user, EMPTY_CARD_RESPONSES_LIST)).thenReturn(response);
 
     Page<UserResponse> result = userService.findAll(pageable);
 
@@ -255,7 +260,8 @@ public class UserServiceImplTest {
             EMAIL,
             ACTIVE,
             CREATED_AT,
-            UPDATED_AT
+            UPDATED_AT,
+            EMPTY_CARD_RESPONSES_LIST
     );
 
     Page<User> users = new PageImpl<>(List.of(user));
@@ -263,7 +269,7 @@ public class UserServiceImplTest {
     when(userRepository.findAll(any(Specification.class), eq(pageable)))
             .thenReturn(users);
 
-    when(userMapper.userToUserResponseEntity(user))
+    when(userMapper.userToUserResponseEntity(user, EMPTY_CARD_RESPONSES_LIST))
             .thenReturn(response);
 
     Page<UserResponse> result =

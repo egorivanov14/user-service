@@ -9,6 +9,7 @@ import com.innowise.userservice.entity.User;
 import com.innowise.userservice.exception.NoDataException;
 import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
+import com.innowise.userservice.security.HashService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,8 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
   private PaymentCardRepository paymentCardRepository;
   @Autowired
   private ObjectMapper objectMapper;
+  @Autowired
+  private HashService hashService;
   private MockMvc mockMvc;
   private Long userId;
 
@@ -75,10 +78,11 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
     );
     createPaymentCard(request);
 
-    PaymentCard paymentCard = paymentCardRepository.findByNumber(CARD_NUMBER).orElseThrow(()->new NoDataException("Payment card no found"));
+    String hashedNumber = hashService.sha256(CARD_NUMBER);
+    PaymentCard paymentCard = paymentCardRepository.findByNumber(hashedNumber).orElseThrow(()->new NoDataException("Payment card no found"));
 
     assertEquals(userId, paymentCard.getUser().getId());
-    assertEquals(CARD_NUMBER, paymentCard.getNumber());
+    assertEquals(hashedNumber, paymentCard.getNumber());
     assertEquals(HOLDER, paymentCard.getHolder());
     assertEquals(EXPIRE_DATE, paymentCard.getExpirationDate());
   }
@@ -90,10 +94,11 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
     );
     createPaymentCard(request);
 
-    PaymentCard paymentCard = paymentCardRepository.findByNumber(CARD_NUMBER).orElseThrow(()->new NoDataException("Payment card no found"));
+    String hashedNumber = hashService.sha256(CARD_NUMBER);
+    PaymentCard paymentCard = paymentCardRepository.findByNumber(hashedNumber).orElseThrow(()->new NoDataException("Payment card no found"));
     Long paymentCardId = paymentCard.getId();
 
-    UpdatePaymentCardRequest updatePaymentCardRequest = new UpdatePaymentCardRequest(NEW_CARD_NUMBER, null, null);
+    UpdatePaymentCardRequest updatePaymentCardRequest = new UpdatePaymentCardRequest(NEW_HOLDER, null);
     String jsonUpdatePaymentCardRequest = objectMapper.writeValueAsString(updatePaymentCardRequest);
 
     mockMvc.perform(put("/api/payment-cards/update/{id}", paymentCardId)
@@ -102,8 +107,8 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
             .andExpect(status().isOk());
 
     PaymentCard updatedPaymentCard = paymentCardRepository.findById(paymentCardId).orElseThrow(()->new NoDataException("Payment card no found"));
-    assertEquals(NEW_CARD_NUMBER, updatedPaymentCard.getNumber());
-    assertEquals(HOLDER, updatedPaymentCard.getHolder());
+    assertEquals(hashedNumber, updatedPaymentCard.getNumber());
+    assertEquals(NEW_HOLDER, updatedPaymentCard.getHolder());
     assertEquals(EXPIRE_DATE, updatedPaymentCard.getExpirationDate());
   }
 
@@ -114,13 +119,14 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
     );
     createPaymentCard(request);
 
-    PaymentCard paymentCard = paymentCardRepository.findByNumber(CARD_NUMBER).orElseThrow(()->new NoDataException("Payment card no found"));
+    String hashedNumber = hashService.sha256(CARD_NUMBER);
+    PaymentCard paymentCard = paymentCardRepository.findByNumber(hashedNumber).orElseThrow(()->new NoDataException("Payment card no found"));
     Long paymentCardId = paymentCard.getId();
 
     mockMvc.perform(get("/api/payment-cards/{id}", paymentCardId)
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andExpect(result->{
-              assertEquals(CARD_NUMBER, paymentCard.getNumber());
+              assertEquals(hashedNumber, paymentCard.getNumber());
               assertEquals(HOLDER, paymentCard.getHolder());
               assertEquals(EXPIRE_DATE, paymentCard.getExpirationDate());
             });
@@ -134,7 +140,8 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
     );
     createPaymentCard(request);
 
-    PaymentCard paymentCard = paymentCardRepository.findByNumber(CARD_NUMBER).orElseThrow(()->new NoDataException("Payment card no found"));
+    String hashedNumber = hashService.sha256(CARD_NUMBER);
+    PaymentCard paymentCard = paymentCardRepository.findByNumber(hashedNumber).orElseThrow(()->new NoDataException("Payment card no found"));
     Long paymentCardId = paymentCard.getId();
 
     mockMvc.perform(post("/api/payment-cards/activate/{id}", paymentCardId)
@@ -150,7 +157,8 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
     );
     createPaymentCard(request);
 
-    PaymentCard paymentCard = paymentCardRepository.findByNumber(CARD_NUMBER).orElseThrow(()->new NoDataException("Payment card no found"));
+    String hashedNumber = hashService.sha256(CARD_NUMBER);
+    PaymentCard paymentCard = paymentCardRepository.findByNumber(hashedNumber).orElseThrow(()->new NoDataException("Payment card no found"));
     Long paymentCardId = paymentCard.getId();
 
 
@@ -169,7 +177,8 @@ public class PaymentCardIntegrationTest extends AbstractIntegrationTest {
     );
     createPaymentCard(request);
 
-    PaymentCard paymentCard = paymentCardRepository.findByNumber(CARD_NUMBER).orElseThrow(()->new NoDataException("Payment card no found"));
+    String hashedNumber = hashService.sha256(CARD_NUMBER);
+    PaymentCard paymentCard = paymentCardRepository.findByNumber(hashedNumber).orElseThrow(()->new NoDataException("Payment card no found"));
     Long paymentCardId = paymentCard.getId();
 
     mockMvc.perform(delete("/api/payment-cards/delete/{id}", paymentCardId)

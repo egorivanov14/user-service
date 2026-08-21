@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
+import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import tools.jackson.databind.jsontype.PolymorphicTypeValidator;
 
@@ -16,16 +17,13 @@ public class CacheConfig {
 
   @Bean
   public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
-    PolymorphicTypeValidator typeValidator = BasicPolymorphicTypeValidator.builder()
-            .allowIfSubType("com.innowise.userservice.dto")
-            .allowIfSubType("java.util")
-            .build();
+    ObjectMapper objectMapper = new ObjectMapper();
 
-    RedisSerializationContext.SerializationPair<Object> jsonSerializer =
-            RedisSerializationContext.SerializationPair.fromSerializer(
-                    GenericJacksonJsonRedisSerializer.builder()
-                            .enableDefaultTyping(typeValidator)
-                            .build());
+    GenericJacksonJsonRedisSerializer serializer =
+            new GenericJacksonJsonRedisSerializer(objectMapper);
+
+    RedisSerializationContext.SerializationPair<Object> serializationPair =
+            RedisSerializationContext.SerializationPair.fromSerializer(serializer);
 
     return builder -> builder
             .transactionAware()
@@ -33,6 +31,7 @@ public class CacheConfig {
                     RedisCacheConfiguration.defaultCacheConfig()
                             .entryTtl(Duration.ofMinutes(10))
                             .disableCachingNullValues()
-                            .serializeValuesWith(jsonSerializer));
+                            .serializeValuesWith(serializationPair)
+            );
   }
 }
